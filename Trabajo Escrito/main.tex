@@ -1,0 +1,107 @@
+
+\documentclass[paper=a4, 
+               fontsize=11pt, 
+               footinclude=true,
+               headinclude=true]{scrreprt}
+
+%%%%% Paquetes
+\usepackage[linedheaders, parts, pdfspacing, dottedtoc]{classicthesis}
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{cite}
+
+%%%%% Comandos general %%%%%
+\newcommand{\Conjunto}[1]{\boldsymbol{\mathcal{#1}}}
+\newcommand{\Estimado}[1]{\boldsymbol{\widehat{#1}}}
+
+%%%%% Tikz %%%%%
+\usetikzlibrary{shapes.geometric, shapes.multipart, backgrounds, fit, arrows}
+
+\tikzstyle{flecha} = [thick,->,>=stealth]
+
+\tikzstyle{data} = [trapezium, 
+                    rounded corners,
+                    trapezium stretches=true,
+                    trapezium left angle=70, 
+                    trapezium right angle=110, 
+                    minimum width=2cm, 
+                    minimum height=1cm, 
+                    text centered, 
+                    draw=black, 
+                    fill=blue!30]
+
+\tikzstyle{proceso} = [rectangle split,
+                       rectangle split parts=2,
+                       rectangle split part fill={red!30,blue!20},
+                       rounded corners,
+                       draw=black, 
+                       minimum width=2cm, 
+                       minimum height=1cm,
+                       text centered,
+                       text width=3.5cm,
+                       inner sep=2pt]
+
+\tikzstyle{proceso1} = [rectangle, 
+                        rounded corners, 
+                        minimum width=2cm, 
+                        minimum height=1cm,
+                        text centered, 
+                        draw=black, 
+                        fill=red!30]
+
+\tikzstyle{contenedor} = [rectangle,
+                          draw=black,
+                          dashed,
+                          inner sep=0.28cm, 
+                          rounded corners,
+                          fill=cyan!30!gray!20,
+                          minimum height=4cm]
+
+\tikzstyle{Fold_Split} = [rectangle, 
+                          rounded corners, 
+                          minimum width=1.5cm, 
+                          minimum height=0.5cm,
+                          text centered,
+                          fill=white]
+
+\tikzstyle{Fold1} = [rectangle, 
+                     rounded corners, 
+                     minimum width=1.5cm, 
+                     minimum height=0.75cm,
+                     text centered, 
+                     draw=black, 
+                     fill=blue!20]
+
+\tikzstyle{Fold2} = [rectangle, 
+                     rounded corners, 
+                     minimum width=1.5cm, 
+                     minimum height=0.75cm,
+                     text centered, 
+                     draw=black, 
+                     fill=red!20]
+
+\begin{document}
+
+\include{Portada}
+
+\tableofcontents
+
+\include{Capítulos/Capítulo1}
+\include{Capítulos/Capítulo2}
+\include{Capítulos/Capítulo3}
+\include{Capítulos/Capítulo4}
+\include{Capítulos/Capítulo5}
+
+\nocite{ISL, GMWR, epskamp2018tutorial, Gonzalo}
+
+\bibliographystyle{apalike}
+\bibliography{referencias}
+
+\end{document}
