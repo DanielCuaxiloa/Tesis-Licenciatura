@@ -16,8 +16,10 @@ library(furrr)
 
 library(smotefamily)
 
+library(VGAM)
 library(glmnet)
 
+library(ggplot2)
 
 # Funciones Auxiliares ----------------------------------------------------
 
@@ -29,9 +31,61 @@ source("../FuncionesAuxiliares.R")
 load("../Folds.RData")
 
 
-# Esquemas de clasificación -----------------------------------------------
+# Algoritmos de clasificación ---------------------------------------------
 
-MR_lasso1 <- function(Train, Test) {
+LRM_1 <- function(Train, Test) {
+  
+  lrm <- vglm(formula = Clase~.,
+              family = multinomial(),
+              data = Train)
+  
+  PredTrain_Probs <- predict(object = lrm,
+                             newdata = select(Train,-Clase),
+                             type = "response")
+  
+  PredTrain_Class <- data.frame(Clase = levels(Train$Clase)[max.col(PredTrain_Probs)])
+  
+  PredTest_Probs <- predict(object = lrm,
+                            newdata = select(Test,-Clase),
+                            type = "response")
+  
+  PredTest_Class <- data.frame(Clase = levels(Test$Clase)[max.col(PredTest_Probs)])
+  
+  MC.Train <- table(PredTrain_Class$Clase, Train$Clase)
+  MC.Test <- table(PredTest_Class$Clase, Test$Clase)
+  
+  return(list(MC.Train = MC.Train,
+              MC.Test = MC.Test))
+  
+}
+
+LRM_2 <- function(Train, Test) {
+  
+  lrm <- vglm(formula = Clase~.^2,
+              family = multinomial(),
+              data = Train)
+  
+  PredTrain_Probs <- predict(object = lrm,
+                             newdata = select(Train,-Clase),
+                             type = "response")
+  
+  PredTrain_Class <- data.frame(Clase = levels(Train$Clase)[max.col(PredTrain_Probs)])
+  
+  PredTest_Probs <- predict(object = lrm,
+                            newdata = select(Test,-Clase),
+                            type = "response")
+  
+  PredTest_Class <- data.frame(Clase = levels(Test$Clase)[max.col(PredTest_Probs)])
+  
+  MC.Train <- table(PredTrain_Class$Clase, Train$Clase)
+  MC.Test <- table(PredTest_Class$Clase, Test$Clase)
+  
+  return(list(MC.Train = MC.Train,
+              MC.Test = MC.Test))
+  
+}
+
+LRM_lasso_1 <- function(Train, Test) {
   
   XTrain <- model.matrix(Clase~., 
                          data = Train)[,-1]
@@ -43,40 +97,7 @@ MR_lasso1 <- function(Train, Test) {
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
                          nfolds = 10,
-                         type.measure = "class",
-                         family = "multinomial", 
-                         type.multinomial = "ungrouped")
-  
-  PredTrain <- predict(object = lasso.tun, 
-                       newx = XTrain, 
-                       type = "class", 
-                       s = "lambda.min")
-  
-  PredTest <- predict(object = lasso.tun, 
-                      newx = XTest, 
-                      type = "class", 
-                      s = "lambda.min")
-  
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
-
-MR_lasso2 <- function(Train, Test) {
-  
-  XTrain <- model.matrix(Clase~.^2, 
-                         data = Train)[,-1]
-  YTrain <- Train$Clase
-  
-  XTest <- model.matrix(Clase~.^2, 
-                        data = Test)[,-1]
-  
-  lasso.tun <- cv.glmnet(x = XTrain, 
-                         y = YTrain, 
-                         nfolds = 10,
+                         alpha = 0.2,
                          lambda = seq(from = 0, to = 15, by = 0.1),
                          type.measure = "class",
                          family = "multinomial", 
@@ -100,7 +121,43 @@ MR_lasso2 <- function(Train, Test) {
   
 }
 
-MR_lasso3 <- function(Train, Test) {
+LRM_lasso_2 <- function(Train, Test) {
+  
+  XTrain <- model.matrix(Clase~.^2, 
+                         data = Train)[,-1]
+  YTrain <- Train$Clase
+  
+  XTest <- model.matrix(Clase~.^2, 
+                        data = Test)[,-1]
+  
+  lasso.tun <- cv.glmnet(x = XTrain, 
+                         y = YTrain, 
+                         nfolds = 10,
+                         alpha = 0.2,
+                         lambda = seq(from = 0, to = 15, by = 0.1),
+                         type.measure = "class",
+                         family = "multinomial", 
+                         type.multinomial = "ungrouped")
+  
+  PredTrain <- predict(object = lasso.tun, 
+                       newx = XTrain, 
+                       type = "class", 
+                       s = "lambda.min")
+  
+  PredTest <- predict(object = lasso.tun, 
+                      newx = XTest, 
+                      type = "class", 
+                      s = "lambda.min")
+  
+  MC.Train <- table(PredTrain, Train$Clase)
+  MC.Test <- table(PredTest, Test$Clase)
+  
+  return(list(MC.Train = MC.Train,
+              MC.Test = MC.Test))
+  
+}
+
+LRM_lasso_SMOTE <- function(Train, Test) {
   
   TrainBalanceado <- SMOTE(X = select(Train, -Clase), 
                            target = Train$Clase, 
@@ -144,15 +201,38 @@ MR_lasso3 <- function(Train, Test) {
 
 # Resultados --------------------------------------------------------------
 
-M1.MR_lasso <- GenerarResultadosParalelo(Metodo = "MR_lasso1", 
-                                         workers = availableCores())
+M1.LRM_1 <- GenerarResultadosParalelo(Metodo = "LRM_1", 
+                                    workers = availableCores())
 
-M2.MR_lasso <- GenerarResultadosParalelo(Metodo = "MR_lasso2", 
-                                         workers = availableCores())
+M1.LRM_2 <- GenerarResultadosParalelo(Metodo = "LRM_2", 
+                                      workers = availableCores())
 
-M3.MR_lasso <- GenerarResultadosParalelo(Metodo = "MR_lasso3", 
-                                         workers = availableCores())
+M1.LRM_lasso_1 <- GenerarResultadosParalelo(Metodo = "LRM_lasso_1", 
+                                            workers = availableCores())
+
+M1.LRM_lasso_2 <- GenerarResultadosParalelo(Metodo = "LRM_lasso_2", 
+                                            workers = availableCores())
 
 
+# Gráficas ----------------------------------------------------------------
 
+LRM_1 <- M1.LRM_1[["Global"]] %>% 
+  mutate(Modelo = "M1.LRM_1")
+
+LRM_2 <- M1.LRM_2[["Global"]] %>% 
+  mutate(Modelo = "M1.LRM_2")
+
+LRM_lasso_1 <- M1.LRM_lasso_1[["Global"]] %>% 
+  mutate(Modelo = "M1.LRM_lasso_1")
+
+LRM_lasso_2 <- M1.LRM_lasso_2[["Global"]] %>% 
+  mutate(Modelo = "M1.LRM_lasso_2")
+
+M1 <- bind_rows(LRM_1, LRM_2, LRM_lasso_1, LRM_lasso_2) %>% 
+  mutate(Modelo = as.factor(Modelo))
+
+ggplot(data = M1,
+       mapping = aes(x = Modelo, y = TestGlobal_KCV)) +
+  geom_boxplot(fill = "steelblue3") + 
+  theme_bw()
 
