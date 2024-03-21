@@ -46,7 +46,7 @@ summary(Datos)
 set.seed(1234)
 Folds <- vfold_cv(data = Datos,
                   v = 10,
-                  repeats = 200,
+                  repeats = 20,
                   strata = Clase)
 
 rm(Datos)

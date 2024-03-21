@@ -20,11 +20,11 @@ library(kerastuneR)
 
 # Funciones Auxiliares ----------------------------------------------------
 
-source("FuncionesAuxiliares.R")
+source("../FuncionesAuxiliares.R")
 
 # Conjuntos Train y Test --------------------------------------------------
 
-load("Folds.RData")
+load("../Folds.RData")
 
 
 # Esquemas de clasificación -----------------------------------------------
