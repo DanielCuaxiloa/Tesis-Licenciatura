@@ -42,10 +42,10 @@ Datos <- Datos %>% select(-c("sample","samples")) %>%
 summary(Datos)
 
 ## Remuestreo de datos en conjuntos de entrenamiento (Train) y evaluación (Test)
-## V-K Cross-validation (V = 200, K = 10).
+## V-K Cross-validation (V = 20, K = 5).
 set.seed(1234)
 Folds <- vfold_cv(data = Datos,
-                  v = 10,
+                  v = 5,
                   repeats = 20,
                   strata = Clase)
 

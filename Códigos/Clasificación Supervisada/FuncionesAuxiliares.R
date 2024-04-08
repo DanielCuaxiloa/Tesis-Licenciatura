@@ -57,8 +57,8 @@ ErroresClasificacion <- function(MC.Train, MC.Test){
   
 }
 
-GenerarResultadosParalelo <- function(Metodo, workers){
-  
+Evaluacion <- function(Metodo, workers){
+
   plan(strategy = multisession, 
        workers = workers)
   
@@ -81,14 +81,14 @@ GenerarResultadosParalelo <- function(Metodo, workers){
   Global <- Individual %>% 
     mutate(ID1 = factor(Folds$id)) %>% 
     group_by(ID1) %>% 
-    summarise(TrainClase1_KCV = mean(TrainClase1),
-              TrainClase2_KCV = mean(TrainClase2),
-              TrainClase3_KCV = mean(TrainClase3),
-              TrainGlobal_KCV = mean(TrainGlobal),
-              TestClase1_KCV = mean(TestClase1),
-              TestClase2_KCV = mean(TestClase2),
-              TestClase3_KCV = mean(TestClase3),
-              TestGlobal_KCV = mean(TestGlobal))
+    summarise(TrainClase1 = mean(TrainClase1),
+              TrainClase2 = mean(TrainClase2),
+              TrainClase3 = mean(TrainClase3),
+              TrainGlobal = mean(TrainGlobal),
+              TestClase1 = mean(TestClase1),
+              TestClase2 = mean(TestClase2),
+              TestClase3 = mean(TestClase3),
+              TestGlobal = mean(TestGlobal))
   
   return(list(Individual = Individual,
               Global = Global))
