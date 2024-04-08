@@ -14,7 +14,7 @@ library(dplyr)
 library(corrplot)
 
 ## Datos en escala log2(norm_count+1)
-datos <- read_tsv("../Datos/denseDataOnlyDownload.tsv")
+datos <- read_tsv("../../Datos/denseDataOnlyDownload.tsv")
 
 # Grupo 1, GTEX Brain (Cortex, Ba24, Ba9) ---------------------------------
 

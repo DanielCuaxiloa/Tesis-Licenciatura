@@ -19,7 +19,8 @@ library(corrplot)
 datos <- read_tsv("../../Datos/denseDataOnlyDownload.tsv")
 
 ## Pre-procesamiento de datos originales para gráfica BoxPlot por grupos
-datos_aux <- datos %>% select(-c("sample","samples")) %>%
+datos_aux <- datos %>% 
+  select(-c("sample","samples")) %>%
   mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category),
          detailed_category = factor(detailed_category)) %>% 
   filter(TCGA_GTEX_main_category %in% c("GTEX Brain", 

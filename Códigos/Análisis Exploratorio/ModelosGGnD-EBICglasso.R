@@ -14,7 +14,7 @@ library(tidyverse)
 library(corrplot)
 
 ## Datos en escala log2(norm_count+1)
-Datos <- read_tsv("../Datos/denseDataOnlyDownload.tsv")
+Datos <- read_tsv("../../Datos/denseDataOnlyDownload.tsv")
 
 Datos <- Datos %>% select(-c("sample","samples")) %>%
   mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category),
@@ -42,62 +42,76 @@ Datos <- Datos %>%
 
 # Grupo 1, GTEX Brain (Cortex, Ba24, Ba9) ---------------------------------
 
-Grupo1 <- Datos %>% 
-  filter(Clase == "GTEX_B")
+GTEX_B <- Datos %>% 
+  filter(Clase == "GTEX_B") %>% 
+  select(-Clase)
 
-Grupo1 <- model.matrix(object = Clase~.^2,
-                       data = Grupo1)
+## Correlación de Pearson
+ModeloGrupo1.1 <- estimateNetwork(data = GTEX_B,
+                                  default = "cor")
 
-Grupo1 <- data.frame(Grupo1) %>% 
-  select(-c("X.Intercept."))
+## EBICglasso
+ModeloGrupo1.2 <- estimateNetwork(data = GTEX_B,
+                                  default = "EBICglasso",
+                                  corMethod = "cor",
+                                  tuning = 0.5)
 
-ModeloGrupo1 <- estimateNetwork(data = Grupo1,
-                                default = "EBICglasso",
-                                corMethod = "cor",
-                                tuning = 5)
-plot(ModeloGrupo1,
+plot(ModeloGrupo1.1,
+     layout = "circle",
      edge.labels = FALSE,
      font = 2)
 
+plot(ModeloGrupo1.2,
+     layout = "circle",
+     edge.labels = FALSE,
+     font = 2)
 
 # Grupo 2, TCGA Brain Lower Grade Glioma ----------------------------------
 
-Grupo2 <- Datos %>% 
-  filter(Clase == "TCGA_BLGG")
+TCGA_BLGG <- Datos %>% 
+  filter(Clase == "TCGA_BLGG") %>% 
+  select(-Clase)
 
-Grupo2 <- model.matrix(object = Clase~.^2,
-                       data = Grupo2)
+## Correlción de Pearson
+ModeloGrupo2.1 <- estimateNetwork(data = TCGA_BLGG,
+                                  default = "cor")
 
-Grupo2 <- data.frame(Grupo2) %>% 
-  select(-c("X.Intercept."))
+## EBICglasso
+ModeloGrupo2.2 <- estimateNetwork(data = TCGA_BLGG,
+                                  default = "EBICglasso",
+                                  corMethod = "cor",
+                                  tuning = 0.5)
 
-ModeloGrupo2 <- estimateNetwork(data = Grupo2,
-                                default = "EBICglasso",
-                                corMethod = "cor",
-                                tuning = 5)
-plot(ModeloGrupo2,
+plot(ModeloGrupo2.1,
+     layout = "circle",
      edge.labels = FALSE,
      font = 2)
 
+plot(ModeloGrupo2.2,
+     layout = "circle",
+     edge.labels = FALSE,
+     font = 2)
 
 # Grupo 3, TCGA Glioblastoma Multiforme -----------------------------------
 
-Grupo3 <- Datos %>% 
-  filter(Clase == "TCGA_GM")
+TCGA_GM <- Datos %>% 
+  filter(Clase == "TCGA_GM") %>% 
+  select(-Clase)
 
-Grupo3 <- model.matrix(object = Clase~.^2,
-                       data = Grupo3)
+ModeloGrupo3.1 <- estimateNetwork(data = TCGA_GM,
+                                 default = "cor")
 
-Grupo3 <- data.frame(Grupo3) %>% 
-  select(-c("X.Intercept."))
+ModeloGrupo3.2 <- estimateNetwork(data = TCGA_GM,
+                                  default = "EBICglasso",
+                                  corMethod = "cor",
+                                  tuning = 0.5)
 
-ModeloGrupo3 <- estimateNetwork(data = Grupo3,
-                                default = "EBICglasso",
-                                corMethod = "cor",
-                                tuning = 2.5)
-plot(ModeloGrupo3,
+plot(ModeloGrupo3.1,
+     layout = "circle",
+     edge.labels = FALSE,
+     font = 2) 
+
+plot(ModeloGrupo3.2,
+     layout = "circle",
      edge.labels = FALSE,
      font = 2)
-
-
-
