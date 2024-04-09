@@ -1,8 +1,8 @@
 
-################################
-# Multinomial Regression lasso #
-# MR lasso                     #
-################################
+###################################
+# Multinomial Logistic Regression #
+# MLR Elastic-Net                 #
+###################################
 
 
 library(tibble)
@@ -33,7 +33,7 @@ load("../Folds.RData")
 
 # Algoritmos de clasificación ---------------------------------------------
 
-LRM_1 <- function(Train, Test) {
+MLR_1 <- function(Train, Test) {
   
   lrm <- vglm(formula = Clase~.,
               family = multinomial(),
@@ -59,7 +59,7 @@ LRM_1 <- function(Train, Test) {
   
 }
 
-LRM_2 <- function(Train, Test) {
+MLR_2 <- function(Train, Test) {
   
   lrm <- vglm(formula = Clase~.^2,
               family = multinomial(),
@@ -85,7 +85,7 @@ LRM_2 <- function(Train, Test) {
   
 }
 
-LRM_lasso_1 <- function(Train, Test) {
+MLR_3 <- function(Train, Test) {
   
   XTrain <- model.matrix(Clase~., 
                          data = Train)[,-1]
@@ -97,7 +97,7 @@ LRM_lasso_1 <- function(Train, Test) {
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
                          nfolds = 10,
-                         alpha = 0.2,
+                         alpha = 0.5,
                          lambda = seq(from = 0, to = 15, by = 0.1),
                          type.measure = "class",
                          family = "multinomial", 
@@ -121,7 +121,7 @@ LRM_lasso_1 <- function(Train, Test) {
   
 }
 
-LRM_lasso_2 <- function(Train, Test) {
+MLR_4 <- function(Train, Test) {
   
   XTrain <- model.matrix(Clase~.^2, 
                          data = Train)[,-1]
@@ -133,7 +133,7 @@ LRM_lasso_2 <- function(Train, Test) {
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
                          nfolds = 10,
-                         alpha = 0.2,
+                         alpha = 0.5,
                          lambda = seq(from = 0, to = 15, by = 0.1),
                          type.measure = "class",
                          family = "multinomial", 
@@ -157,82 +157,48 @@ LRM_lasso_2 <- function(Train, Test) {
   
 }
 
-LRM_lasso_SMOTE <- function(Train, Test) {
-  
-  TrainBalanceado <- SMOTE(X = select(Train, -Clase), 
-                           target = Train$Clase, 
-                           K = 5,
-                           dup_size = 2)$data %>% 
-    mutate(Clase = factor(class)) %>% 
-    select(-class)
-  
-  XTrainBalanceado <- model.matrix(Clase~., 
-                                   data = TrainBalanceado)[,-1]
-  YTrain <- TrainBalanceado$Clase
-  
-  XTest <- model.matrix(Clase~., 
-                        data = Test)[,-1]
-  
-  lasso.tun <- cv.glmnet(x = XTrainBalanceado, 
-                         y = YTrain, 
-                         nfolds = 10,
-                         type.measure = "class",
-                         family = "multinomial", 
-                         type.multinomial = "ungrouped")
-  
-  PredTrain <- predict(object = lasso.tun, 
-                       newx = XTrainBalanceado, 
-                       type = "class", 
-                       s = "lambda.min")
-  
-  PredTest <- predict(object = lasso.tun, 
-                      newx = XTest, 
-                      type = "class", 
-                      s = "lambda.min")
-  
-  MC.Train <- table(PredTrain, TrainBalanceado$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
-
 
 # Resultados --------------------------------------------------------------
 
-M1.LRM_1 <- GenerarResultadosParalelo(Metodo = "LRM_1", 
-                                    workers = availableCores())
+M1.MLR_1 <- Evaluacion(Metodo = "MLR_1", 
+                       workers = availableCores())
 
-M1.LRM_2 <- GenerarResultadosParalelo(Metodo = "LRM_2", 
-                                      workers = availableCores())
+M1.MLR_2 <- Evaluacion(Metodo = "MLR_2",
+                       workers = availableCores())
 
-M1.LRM_lasso_1 <- GenerarResultadosParalelo(Metodo = "LRM_lasso_1", 
-                                            workers = availableCores())
+M1.MLR_3 <- Evaluacion(Metodo = "MLR_3",
+                       workers = availableCores())
 
-M1.LRM_lasso_2 <- GenerarResultadosParalelo(Metodo = "LRM_lasso_2", 
-                                            workers = availableCores())
+M1.MLR_4 <- Evaluacion(Metodo = "MLR_4",
+                       workers = availableCores())
 
 
 # Gráficas ----------------------------------------------------------------
 
-LRM_1 <- M1.LRM_1[["Global"]] %>% 
-  mutate(Modelo = "M1.LRM_1")
+G.MLR_1 <- M1.MLR_1[["Global"]] %>% 
+  mutate(Modelo = "M1",
+         Nombre = "MLR_1")
 
-LRM_2 <- M1.LRM_2[["Global"]] %>% 
-  mutate(Modelo = "M1.LRM_2")
+G.MLR_2 <- M1.MLR_2[["Global"]] %>% 
+  mutate(Modelo = "M1",
+         Nombre = "MLR_2")
 
-LRM_lasso_1 <- M1.LRM_lasso_1[["Global"]] %>% 
-  mutate(Modelo = "M1.LRM_lasso_1")
+G.MLR_3 <- M1.MLR_3[["Global"]] %>% 
+  mutate(Modelo = "M1",
+         Nombre = "MLR_3")
 
-LRM_lasso_2 <- M1.LRM_lasso_2[["Global"]] %>% 
-  mutate(Modelo = "M1.LRM_lasso_2")
+G.MLR_4 <- M1.MLR_4[["Global"]] %>% 
+  mutate(Modelo = "M1",
+         Nombre = "MLR_4")
 
-M1 <- bind_rows(LRM_1, LRM_2, LRM_lasso_1, LRM_lasso_2) %>% 
-  mutate(Modelo = as.factor(Modelo))
+M1 <- bind_rows(G.MLR_1, G.MLR_2, G.MLR_3, G.MLR_4) %>% 
+  mutate(Modelo = as.factor(Modelo),
+         Nombre = as.factor(Nombre))
 
 ggplot(data = M1,
-       mapping = aes(x = Modelo, y = TestGlobal_KCV)) +
+       mapping = aes(x = Nombre, y = TestGlobal)) +
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
+mean(G.MLR_1$TestGlobal)
+mean(G.MLR_3$TestGlobal)
