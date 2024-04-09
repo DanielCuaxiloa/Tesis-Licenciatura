@@ -14,12 +14,12 @@ library(rsample)
 library(purrr)
 library(furrr)
 
-library(smotefamily)
-
 library(VGAM)
 library(glmnet)
 
 library(ggplot2)
+
+library(readr)
 
 # Funciones Auxiliares ----------------------------------------------------
 
@@ -202,3 +202,8 @@ ggplot(data = M1,
 
 mean(G.MLR_1$TestGlobal)
 mean(G.MLR_3$TestGlobal)
+
+write.csv(x = M1,
+          file = "Modelo_1.csv",
+          row.names = FALSE)
+

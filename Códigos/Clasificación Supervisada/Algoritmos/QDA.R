@@ -14,24 +14,25 @@ library(rsample)
 library(purrr)
 library(furrr)
 
-library(smotefamily)
-
 library(MASS)
 
+library(ggplot2)
+
+library(readr)
 
 # Funciones Auxiliares ----------------------------------------------------
 
-source("FuncionesAuxiliares.R")
+source("../FuncionesAuxiliares.R")
 
 
 # Conjuntos Train y Test --------------------------------------------------
 
-load("Folds.RData")
+load("../Folds.RData")
 
 
 # Esquemas de clasificación -----------------------------------------------
 
-QDA1 <- function(Train, Test) {
+QDA_1 <- function(Train, Test) {
   
   QDA <- qda(formula = Clase~., 
              data = Train)
@@ -50,7 +51,7 @@ QDA1 <- function(Train, Test) {
   
 }
 
-QDA2 <- function(Train, Test) {
+QDA_2 <- function(Train, Test) {
   
   QDA <- qda(formula = Clase~.^2, 
              data = Train)
@@ -69,38 +70,38 @@ QDA2 <- function(Train, Test) {
   
 }
 
-QDA3 <- function(Train, Test) {
-  
-  TrainBalanceado <- SMOTE(X = select(Train, -Clase), 
-                           target = Train$Clase, 
-                           K = 5,
-                           dup_size = 2)$data %>% 
-    mutate(Clase = factor(class)) %>% 
-    select(-class)
-  
-  QDA <- qda(formula = Clase~., 
-             data = TrainBalanceado)
-  
-  PredTrain <- predict(object = QDA,
-                       newdata = TrainBalanceado)$class
-  
-  PredTest <- predict(object = QDA,
-                      newdata = Test)$class
-  
-  MC.Train <- table(PredTrain, TrainBalanceado$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
+
+# Resultados --------------------------------------------------------------
+
+M3.QDA_1 <- Evaluacion(Metodo = "QDA_1", 
+                       workers = availableCores())
+
+M3.QDA_2 <- Evaluacion(Metodo = "QDA_2", 
+                       workers = availableCores())
 
 
-M1.QDA <- GenerarResultadosParalelo(Metodo = "QDA1", 
-                                    workers = availableCores())
+# Gráficas ----------------------------------------------------------------
 
-M2.QDA <- GenerarResultadosParalelo(Metodo = "QDA2", 
-                                    workers = availableCores())
+G.QDA_1 <- M3.QDA_1[["Global"]] %>% 
+  mutate(Modelo = "M3",
+         Nombre = "QDA_1")
 
-M3.QDA <- GenerarResultadosParalelo(Metodo = "QDA3", 
-                                    workers = availableCores())
+G.QDA_2 <- M3.QDA_2[["Global"]] %>% 
+  mutate(Modelo = "M3",
+         Nombre = "QDA_2")
+
+M3 <- bind_rows(G.QDA_1, G.QDA_2) %>% 
+  mutate(Modelo = as.factor(Modelo),
+         Nombre = as.factor(Nombre))
+
+ggplot(data = M3,
+       mapping = aes(x = Nombre, y = TestGlobal)) +
+  geom_boxplot(fill = "steelblue3") + 
+  theme_bw()
+
+mean(G.QDA_1$TestGlobal)
+mean(G.QDA_2$TestGlobal)
+
+write.csv(x = M3,
+          file = "Modelo_3.csv",
+          row.names = FALSE)
