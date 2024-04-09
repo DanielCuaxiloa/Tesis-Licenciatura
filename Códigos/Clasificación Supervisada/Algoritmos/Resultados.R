@@ -24,3 +24,13 @@ ggplot(data = Datos,
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
+Datos %>% 
+  group_by(Modelo, Nombre) %>% 
+  summarise(TestGlobal = mean(TestGlobal),
+            TestClase1 = mean(TestClase1),
+            TestClase2 = mean(TestClase2),
+            TestClase3 = mean(TestClase3)) %>% 
+  arrange(desc(TestGlobal)) %>% 
+  ungroup()
+
+
