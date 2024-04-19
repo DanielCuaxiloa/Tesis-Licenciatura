@@ -15,12 +15,16 @@ Modelo_2 <- read.csv(file = "Modelo_2.csv",
 Modelo_3 <- read.csv(file = "Modelo_3.csv", 
                      stringsAsFactors = TRUE)
 
-Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3) %>% 
+Modelo_4 <- read.csv(file = "Modelo_4.csv", 
+                     stringsAsFactors = TRUE)
+
+Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4) %>% 
   select(-ID1)
 
 ggplot(data = Datos,
        mapping = aes(x = Nombre, y = TestGlobal)) +
-  facet_wrap(~Modelo, scales = "free_x") +
+  facet_grid(cols = vars(Modelo), 
+             scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 

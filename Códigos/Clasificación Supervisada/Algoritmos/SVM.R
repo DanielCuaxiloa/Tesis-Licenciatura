@@ -14,10 +14,9 @@ library(rsample)
 library(purrr)
 library(furrr)
 
-library(smotefamily)
-
 library(e1071)
 
+library(ggplot2)
 
 # Funciones Auxiliares ----------------------------------------------------
 
@@ -31,7 +30,7 @@ load("../Folds.RData")
 
 # Esquemas de clasificación -----------------------------------------------
 
-SVM1 <- function(Train, Test) {
+M4.SVM_1 <- function(Train, Test) {
   
   svm <- svm(formula = Clase~.,
              kernel = "radial",
@@ -53,7 +52,7 @@ SVM1 <- function(Train, Test) {
   
 }
 
-SVM2 <- function(Train, Test) {
+M4.SVM_2 <- function(Train, Test) {
   
   svm.tune <- tune(svm, Clase~., 
                    data = Train, 
@@ -82,44 +81,42 @@ SVM2 <- function(Train, Test) {
   
 }
 
-SVM3 <- function(Train, Test) {
-  
-  TrainBalanceado <- SMOTE(X = select(Train, -Clase), 
-                           target = Train$Clase, 
-                           K = 5,
-                           dup_size = 2)$data %>% 
-    mutate(Clase = factor(class)) %>% 
-    select(-class)
 
-  svm <- svm(formula = Clase~.,
-             kernel = "radial",
-             data = TrainBalanceado)
-    
-  PredTrain <- predict(object = svm, 
-                       newdata = TrainBalanceado, 
-                       type = "response")
-    
-  PredTest <- predict(object = svm, 
-                      newdata = Test, 
-                      type = "response")
-    
-  MC.Train <- table(PredTrain, TrainBalanceado$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
+M4.SVM_1 <- Evaluacion(Metodo = "M4.SVM_1", 
+                       workers = availableCores())
+
+M4.SVM_2 <- Evaluacion(Metodo = "M4.SVM_2", 
+                       workers = availableCores())
 
 
-M1.SVM <- GenerarResultadosParalelo(Metodo = "SVM1", 
-                                    workers = availableCores())
 
-M2.SVM <- GenerarResultadosParalelo(Metodo = "SVM2", 
-                                    workers = availableCores())
+# Grafica -----------------------------------------------------------------
 
-M3.SVM <- GenerarResultadosParalelo(Metodo = "SVM3", 
-                                    workers = availableCores())
+G.SVM_1 <- M4.SVM_1[["Global"]] %>%
+  mutate(Modelo = "M4",
+         Nombre = "SVM_1")
+
+G.SVM_2 <- M4.SVM_2[["Global"]] %>% 
+  mutate(Modelo = "M4",
+         Nombre = "SVM_2")
+
+M4 <- bind_rows(G.SVM_1, G.SVM_2) %>% 
+  mutate(Modelo = as.factor(Modelo),
+         Nombre = as.factor(Nombre))
+
+ggplot(data = M4,
+       mapping = aes(x = Nombre, y = TestGlobal)) +
+  geom_boxplot(fill = "steelblue3") + 
+  theme_bw()
+
+mean(G.SVM_1$TestGlobal)
+mean(G.SVM_2$TestGlobal)
+
+write.csv(x = M4,
+          file = "Modelo_4.csv",
+          row.names = FALSE)
+
+
 
 
 

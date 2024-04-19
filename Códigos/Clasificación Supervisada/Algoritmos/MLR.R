@@ -96,8 +96,8 @@ MLR_3 <- function(Train, Test) {
   
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
-                         nfolds = 10,
-                         alpha = 0.5,
+                         nfolds = 5,
+                         alpha = 0.8,
                          lambda = seq(from = 0, to = 15, by = 0.1),
                          type.measure = "class",
                          family = "multinomial", 
@@ -132,8 +132,8 @@ MLR_4 <- function(Train, Test) {
   
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
-                         nfolds = 10,
-                         alpha = 0.5,
+                         nfolds = 5,
+                         alpha = 0.8,
                          lambda = seq(from = 0, to = 15, by = 0.1),
                          type.measure = "class",
                          family = "multinomial", 
