@@ -43,8 +43,8 @@ LDA_1 <- function(Train, Test) {
   PredTest <- predict(object = LDA,
                       newdata = Test)$class
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
@@ -62,8 +62,8 @@ LDA_2 <- function(Train, Test) {
   PredTest <- predict(object = LDA,
                       newdata = Test)$class
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))

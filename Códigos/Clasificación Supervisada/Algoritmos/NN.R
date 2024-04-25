@@ -87,8 +87,8 @@ NN1 <- function(Train, Test) {
       . == 2 ~ "TCGA_GM") %>% factor()) %>% 
     select(prediccion)
   
-  MC.Train <- table(y_Train$prediccion, Train$Clase)
-  MC.Test <- table(y_Test$prediccion, Test$Clase)
+  MC.Train <- table(Train$Clase, y_Train$prediccion)
+  MC.Test <- table(Test$Clase, y_Test$prediccion)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))

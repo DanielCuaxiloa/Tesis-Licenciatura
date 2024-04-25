@@ -44,8 +44,8 @@ M4.SVM_1 <- function(Train, Test) {
                       newdata = Test, 
                       type = "response")
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
@@ -73,8 +73,8 @@ M4.SVM_2 <- function(Train, Test) {
                       newdata = Test, 
                       type = "response")
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))

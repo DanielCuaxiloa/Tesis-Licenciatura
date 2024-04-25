@@ -51,8 +51,8 @@ MLR_1 <- function(Train, Test) {
   
   PredTest_Class <- data.frame(Clase = levels(Test$Clase)[max.col(PredTest_Probs)])
   
-  MC.Train <- table(PredTrain_Class$Clase, Train$Clase)
-  MC.Test <- table(PredTest_Class$Clase, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain_Class$Clase)
+  MC.Test <- table(Test$Clase, PredTest_Class$Clase)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
@@ -77,8 +77,8 @@ MLR_2 <- function(Train, Test) {
   
   PredTest_Class <- data.frame(Clase = levels(Test$Clase)[max.col(PredTest_Probs)])
   
-  MC.Train <- table(PredTrain_Class$Clase, Train$Clase)
-  MC.Test <- table(PredTest_Class$Clase, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain_Class$Clase)
+  MC.Test <- table(Test$Clase, PredTest_Class$Clase)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
@@ -113,8 +113,8 @@ MLR_3 <- function(Train, Test) {
                       type = "class", 
                       s = "lambda.min")
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
@@ -149,8 +149,8 @@ MLR_4 <- function(Train, Test) {
                       type = "class", 
                       s = "lambda.min")
   
-  MC.Train <- table(PredTrain, Train$Clase)
-  MC.Test <- table(PredTest, Test$Clase)
+  MC.Train <- table(Train$Clase, PredTrain)
+  MC.Test <- table(Test$Clase, PredTest)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
