@@ -18,7 +18,10 @@ Modelo_3 <- read.csv(file = "Modelo_3.csv",
 Modelo_4 <- read.csv(file = "Modelo_4.csv", 
                      stringsAsFactors = TRUE)
 
-Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4) %>% 
+Modelo_5 <- read.csv(file = "Modelo_5.csv", 
+                     stringsAsFactors = TRUE)
+
+Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4, Modelo_5) %>% 
   select(-ID1)
 
 ggplot(data = Datos,

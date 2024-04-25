@@ -22,30 +22,30 @@ ConjuntoEvaluacion <- function(x) {
 
 ErroresClasificacion <- function(MC.Train, MC.Test){
   
-  # Errores aparentes
+  # Train
   
   ## Clase 1
-  TrainClase1 <- MC.Train[1,1]/sum(MC.Train[,1])
+  TrainClase1 <- MC.Train[1,1]/sum(MC.Train[1,])
   
   ## Clase 2
-  TrainClase2 <- MC.Train[2,2]/sum(MC.Train[,2])
+  TrainClase2 <- MC.Train[2,2]/sum(MC.Train[2,])
   
   ## Clase 3
-  TrainClase3 <- MC.Train[3,3]/sum(MC.Train[,3])
+  TrainClase3 <- MC.Train[3,3]/sum(MC.Train[3,])
   
   ## TCC (Accuracy)
   TrainGlobal <- sum(diag(MC.Train))/sum(MC.Train)
   
-  # Errores de predicción
+  # Test
   
   ## Clase 1
-  TestClase1 <- MC.Test[1,1]/sum(MC.Test[,1])
+  TestClase1 <- MC.Test[1,1]/sum(MC.Test[1,])
   
   ## Clase 2
-  TestClase2 <- MC.Test[2,2]/sum(MC.Test[,2])
+  TestClase2 <- MC.Test[2,2]/sum(MC.Test[2,])
   
   ## Clase 3
-  TestClase3 <- MC.Test[3,3]/sum(MC.Test[,3])
+  TestClase3 <- MC.Test[3,3]/sum(MC.Test[3,])
   
   ## TCC (Accuracy)
   TestGlobal <- sum(diag(MC.Test))/sum(MC.Test)
