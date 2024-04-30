@@ -12,14 +12,16 @@ library(ggforce)
 library(ggridges)
 library(corrplot)
 
+library(bootnet)
+
 
 # Datos -------------------------------------------------------------------
 
 ## Datos en escala log2(norm_count+1)
-datos <- read_tsv("../../Datos/denseDataOnlyDownload.tsv")
+Datos <- read_tsv("../../Datos/denseDataOnlyDownload.tsv")
 
-## Pre-procesamiento de datos originales para gráfica BoxPlot por grupos
-datos_aux <- datos %>% 
+## Preprocesamiento de datos originales.
+Datos <- Datos %>% 
   select(-c("sample","samples")) %>%
   mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category),
          detailed_category = factor(detailed_category)) %>% 
@@ -35,106 +37,119 @@ datos_aux <- datos %>%
                                                c("GTEX Brain", 
                                                  "TCGA Brain Lower Grade Glioma",
                                                  "TCGA Glioblastoma Multiforme"))) %>% 
-  pivot_longer(cols = !c("_gender", "TCGA_GTEX_main_category", "detailed_category"),
-               names_to = "GeneExpression",
-               values_to = "Aux")
+  select(-c("_gender", "detailed_category")) %>% 
+  mutate(Clase = factor(case_when(TCGA_GTEX_main_category == "GTEX Brain" ~ "GTEX_Brain",
+                                  TCGA_GTEX_main_category == "TCGA Brain Lower Grade Glioma" ~ "TCGA_LGG",
+                                  TCGA_GTEX_main_category == "TCGA Glioblastoma Multiforme" ~ "TCGA_GM"))) %>% 
+  select(-TCGA_GTEX_main_category)
 
 
 # Gráfica BoxPlot por grupos ----------------------------------------------
 
-ggplot(data = datos_aux,
-       mapping = aes(x = reorder(x = GeneExpression,
+Datos %>% 
+pivot_longer(cols = -Clase,
+             names_to = "GeneExpression",
+             values_to = "Aux") %>% 
+ggplot(mapping = aes(x = Aux, 
+                     y = reorder(x = GeneExpression,
                                  X = Aux,
-                                 FUN = median), 
-                     y = Aux,
-                     fill = TCGA_GTEX_main_category)) + 
+                                 FUN = median),
+                     fill = Clase)) + 
   geom_boxplot(alpha = 0.5) +
   scale_fill_viridis_d() +
-  facet_wrap(~TCGA_GTEX_main_category) +
-  coord_flip() + 
+  facet_wrap(~Clase) +
   theme_bw() +
-  theme(legend.position = "none",
-        strip.text = element_text(size = 8)) + 
-  labs(x="Gene Expression",
-       y="log2(norm count + 1)")
+  theme(legend.position = "none") + 
+  labs(x = "log2(norm count + 1)",
+       y = "Enzima")
 
 
 # Gráfica de densidades por grupos ----------------------------------------
 
-ggplot(data = datos_aux,
-       mapping = aes(y = reorder(x = GeneExpression,
-                                 X = Aux,
-                                 FUN = median), 
-                     x = Aux,
-                     fill = TCGA_GTEX_main_category)) + 
+Datos %>% 
+  pivot_longer(cols = -Clase,
+               names_to = "GeneExpression",
+               values_to = "Aux") %>% 
+  ggplot(mapping = aes(x = Aux, 
+                       y = reorder(x = GeneExpression,
+                                   X = Aux,
+                                   FUN = median),
+                       fill = Clase)) + 
   geom_density_ridges(alpha = 0.5,
                       scale = 0.9) +
   scale_fill_viridis_d() +
-  facet_wrap(~TCGA_GTEX_main_category) +
+  facet_wrap(~Clase) +
   theme_bw() +
-  theme(legend.position = "none",
-        strip.text = element_text(size = 8)) + 
-  labs(y="Gene Expression",
-       x="log2(norm count + 1)")
+  theme(legend.position = "none") + 
+  labs(x = "log2(norm count + 1)",
+       y = "Enzima")
 
 
 # Correlación de Pearson --------------------------------------------------
 
-## Grupo: GTEX Brain(Brain - Cortex, Brain - Anterior Cingulate Cortex (Ba24) y
-## Brain - Frontal Cortex (Ba9))
-datos %>% 
-  mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category),
-         detailed_category = factor(detailed_category)) %>% 
-  filter(TCGA_GTEX_main_category == "GTEX Brain") %>% 
-  filter(detailed_category %in% c("Brain - Cortex",
-                                  "Brain - Anterior Cingulate Cortex (Ba24)",
-                                  "Brain - Frontal Cortex (Ba9)")) %>%
-  select(!c("sample","samples","_gender",
-            "detailed_category","TCGA_GTEX_main_category")) %>% 
+## Clase: Brain_Cortex: * Brain - Cortex
+##                      * Brain - Anterior Cingulate Cortex (Ba24)
+##                      * Brain - Frontal Cortex (Ba9))
+Pearson.GTEX_Brain <- Datos %>% 
+  filter(Clase == "GTEX_Brain") %>%
+  select(-Clase) %>% 
   cor(method = "pearson") %>% 
   round(digits = 3) %>% 
-  corrplot(method = "ellipse",
-           type = "upper",
-           title = "GTEX Brain \n correlación de Pearson",
-           mar=c(0,0,2,0), 
-           diag = FALSE,
-           addCoef.col = "black",
-           tl.cex = 0.75)
+  data.frame()
 
-## Grupo: TCGA Brain Lower Grade Glioma
-datos %>% 
-  mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category)) %>% 
-  filter(TCGA_GTEX_main_category == "TCGA Brain Lower Grade Glioma") %>%
-  select(!c("sample","samples","_gender",
-            "detailed_category","TCGA_GTEX_main_category")) %>% 
+MGG.Pearson.GTEX_Brain <- Datos %>% 
+  filter(Clase == "GTEX_Brain") %>%
+  select(-Clase) %>% 
+  estimateNetwork(default = "cor")
+
+## Clase: TCGA Lower Grade Glioma
+Pearson.TCGA_LGG <- Datos %>% 
+  filter(Clase == "TCGA_LGG") %>%
+  select(-Clase) %>% 
   cor(method = "pearson") %>% 
   round(digits = 3) %>% 
-  corrplot(method = "ellipse",
-           type = "upper",
-           title = "TCGA Brain Lower Grade Glioma \n correlación de Pearson",
-           mar=c(0,0,2,0), 
-           diag = FALSE,
-           addCoef.col = "black",
-           tl.cex = 0.75)
+  data.frame()
 
-## Grupo: TCGA Glioblastoma Multiforme
-datos %>% 
-  mutate(TCGA_GTEX_main_category = factor(TCGA_GTEX_main_category)) %>% 
-  filter(TCGA_GTEX_main_category == "TCGA Glioblastoma Multiforme") %>% 
-  select(!c("sample","samples","_gender",
-            "detailed_category","TCGA_GTEX_main_category")) %>% 
+MGG.Pearson.TCGA_LGG <- Datos %>% 
+  filter(Clase == "TCGA_LGG") %>%
+  select(-Clase) %>% 
+  estimateNetwork(default = "cor")
+
+## Clase: TCGA Glioblastoma Multiforme
+Pearson.TCGA_GBM <- Datos %>%
+  filter(Clase == "TCGA_GM") %>%
+  select(-Clase) %>% 
   cor(method = "pearson") %>% 
   round(digits = 3) %>% 
-  corrplot(method = "ellipse",
-           type = "upper",
-           title = "TCGA Glioblastoma Multiforme \n Correlación de Pearson",
-           mar=c(0,0,2,0), 
-           diag = FALSE,
-           addCoef.col = "black",
-           tl.cex = 0.75)
+  data.frame()
+
+MGG.Pearson.TCGA_GM <- Datos %>% 
+  filter(Clase == "TCGA_GM") %>%
+  select(-Clase) %>% 
+  estimateNetwork(default = "cor")
 
 
+# GGM Gráficas ------------------------------------------------------------
 
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(MGG.Pearson.GTEX_Brain,
+     title = "GTEX_Brain",
+     layout = "circle",
+     edge.labels = FALSE,
+     label.prop = 1,
+     font = 2)
+plot(MGG.Pearson.TCGA_LGG,
+     title = "TCGA_LGG",
+     layout = "circle",
+     edge.labels = FALSE,
+     label.prop = 1,
+     font = 2)
+plot(MGG.Pearson.TCGA_GM,
+     title = "TCGA_GM",
+     layout = "circle",
+     edge.labels = FALSE,
+     label.prop = 1,
+     font = 2)
 
 
 
