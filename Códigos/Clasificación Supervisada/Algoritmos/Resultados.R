@@ -21,11 +21,15 @@ Modelo_4 <- read.csv(file = "Modelo_4.csv",
 Modelo_5 <- read.csv(file = "Modelo_5.csv", 
                      stringsAsFactors = TRUE)
 
-Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4, Modelo_5) %>% 
+Modelo_6 <- read.csv(file = "Modelo_6.csv", 
+                     stringsAsFactors = TRUE)
+
+
+Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4, Modelo_5, Modelo_6) %>% 
   select(-ID1)
 
 ggplot(data = Datos,
-       mapping = aes(x = Nombre, y = TestGlobal)) +
+       mapping = aes(x = Nombre, y = TestClase2)) +
   facet_grid(cols = vars(Modelo), 
              scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 

@@ -98,4 +98,4 @@ Modelo2.1 <- NetDA(X = X,
                    method = 2,
                    X_test = X)
 
-table(Y,Modelo2.1$yhat)
+table(Y,Modelo2.1$yhat) 
