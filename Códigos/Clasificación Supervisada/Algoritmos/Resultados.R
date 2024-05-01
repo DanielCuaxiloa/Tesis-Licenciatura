@@ -6,38 +6,34 @@
 library(dplyr)
 library(ggplot2)
 
-Modelo_1 <- read.csv(file = "Modelo_1.csv", 
+Modelo1 <- read.csv(file = "Modelo1.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo_2 <- read.csv(file = "Modelo_2.csv", 
+Modelo2 <- read.csv(file = "Modelo2.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo_3 <- read.csv(file = "Modelo_3.csv", 
+Modelo3 <- read.csv(file = "Modelo3.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo_4 <- read.csv(file = "Modelo_4.csv", 
+Modelo4 <- read.csv(file = "Modelo4.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo_5 <- read.csv(file = "Modelo_5.csv", 
+Modelo5 <- read.csv(file = "Modelo5.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo_6 <- read.csv(file = "Modelo_6.csv", 
+Modelo6 <- read.csv(file = "Modelo6.csv", 
                      stringsAsFactors = TRUE)
 
 
-Datos <- bind_rows(Modelo_1, Modelo_2, Modelo_3, Modelo_4, Modelo_5, Modelo_6) %>% 
+Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5, Modelo6) %>% 
   select(-ID1)
 
 ggplot(data = Datos,
-       mapping = aes(x = Nombre, y = TestClase2)) +
+       mapping = aes(x = Nombre, y = TestGlobal)) +
   facet_grid(cols = vars(Modelo), 
              scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
-
-reorder(x = Nombre,
-        X = TestClase2,
-        FUN = median)
 
 Datos %>% 
   group_by(Modelo, Nombre) %>% 
@@ -45,7 +41,7 @@ Datos %>%
             TestClase1 = mean(TestClase1),
             TestClase2 = mean(TestClase2),
             TestClase3 = mean(TestClase3)) %>% 
-  arrange(desc(TestGlobal)) %>% 
+  arrange(desc(TestClase2)) %>% 
   ungroup()
 
 

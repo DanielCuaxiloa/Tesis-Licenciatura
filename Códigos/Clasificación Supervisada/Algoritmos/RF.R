@@ -14,10 +14,9 @@ library(rsample)
 library(purrr)
 library(furrr)
 
-library(smotefamily)
-
 library(ranger)
 
+library(ggplot2)
 
 # Funciones Auxiliares ----------------------------------------------------
 
@@ -31,7 +30,7 @@ load("../Folds.RData")
 
 # Esquemas de clasificación -----------------------------------------------
 
-RF1 <- function(Train, Test) {
+RF.1 <- function(Train, Test) {
   
   RF <- ranger(formula = Clase~.,
                data = Train,
@@ -52,7 +51,7 @@ RF1 <- function(Train, Test) {
   
 }
 
-RF2 <- function(Train, Test) {
+RF.2 <- function(Train, Test) {
   
   malla_hyper <- expand.grid(
     mtry       = seq(from = 1, to = 11, by = 1),
@@ -97,11 +96,41 @@ RF2 <- function(Train, Test) {
 }
 
 
-M1.RF <- GenerarResultadosParalelo(Metodo = "RF1", 
-                                    workers = availableCores())
+# Resultados --------------------------------------------------------------
 
-M2.RF <- GenerarResultadosParalelo(Metodo = "RF2", 
-                                    workers = availableCores())
+M5.RF.1 <- Evaluacion(Metodo = "RF.1",
+                      workers = availableCores())
+
+M5.RF.2 <- Evaluacion(Metodo = "RF.2",
+                      workers = availableCores())
+
+
+# Grafica -----------------------------------------------------------------
+
+G.RF.1 <- M5.RF.1[["Global"]] %>%
+  mutate(Modelo = "M5",
+         Nombre = "RF.1")
+
+G.RF.2 <- M5.RF.2[["Global"]] %>%
+  mutate(Modelo = "M5",
+         Nombre = "RF.2")
+
+M5 <- bind_rows(G.RF.1, G.RF.2) %>% 
+  mutate(Modelo = as.factor(Modelo),
+         Nombre = as.factor(Nombre))
+
+ggplot(data = M5,
+       mapping = aes(x = Nombre, y = TestGlobal)) +
+  geom_boxplot(fill = "steelblue3") + 
+  theme_bw()
+
+mean(G.RF.1$TestGlobal)
+mean(G.RF.2$TestGlobal)
+
+write.csv(x = M5,
+          file = "Modelo5.csv",
+          row.names = FALSE)
+
 
 
 

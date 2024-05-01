@@ -30,7 +30,7 @@ load("../Folds.RData")
 
 # Esquemas de clasificación -----------------------------------------------
 
-M4.SVM_1 <- function(Train, Test) {
+SVM.1 <- function(Train, Test) {
   
   svm <- svm(formula = Clase~.,
              kernel = "radial",
@@ -52,12 +52,12 @@ M4.SVM_1 <- function(Train, Test) {
   
 }
 
-M4.SVM_2 <- function(Train, Test) {
+SVM.2 <- function(Train, Test) {
   
   svm.tune <- tune(svm, Clase~., 
                    data = Train, 
                    kernel = "radial", 
-                   ranges = list(cost = seq(from = 1, to = 5, by = 1), 
+                   ranges = list(cost = seq(from = 1, to = 100, by = 10), 
                                  gamma = seq(from = 0.1, to = 1, by = 0.1)))
   
   svm <- svm(formula = Clase~.,
@@ -82,25 +82,26 @@ M4.SVM_2 <- function(Train, Test) {
 }
 
 
-M4.SVM_1 <- Evaluacion(Metodo = "M4.SVM_1", 
+# Resultados --------------------------------------------------------------
+
+M4.SVM.1 <- Evaluacion(Metodo = "SVM.1", 
                        workers = availableCores())
 
-M4.SVM_2 <- Evaluacion(Metodo = "M4.SVM_2", 
+M4.SVM.2 <- Evaluacion(Metodo = "SVM.2", 
                        workers = availableCores())
-
 
 
 # Grafica -----------------------------------------------------------------
 
-G.SVM_1 <- M4.SVM_1[["Global"]] %>%
+G.SVM.1 <- M4.SVM.1[["Global"]] %>%
   mutate(Modelo = "M4",
-         Nombre = "SVM_1")
+         Nombre = "SVM.1")
 
-G.SVM_2 <- M4.SVM_2[["Global"]] %>% 
+G.SVM.2 <- M4.SVM.2[["Global"]] %>% 
   mutate(Modelo = "M4",
-         Nombre = "SVM_2")
+         Nombre = "SVM.2")
 
-M4 <- bind_rows(G.SVM_1, G.SVM_2) %>% 
+M4 <- bind_rows(G.SVM.1, G.SVM.2) %>% 
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
@@ -109,11 +110,11 @@ ggplot(data = M4,
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
-mean(G.SVM_1$TestGlobal)
-mean(G.SVM_2$TestGlobal)
+mean(G.SVM.1$TestGlobal)
+mean(G.SVM.2$TestGlobal)
 
 write.csv(x = M4,
-          file = "Modelo_4.csv",
+          file = "Modelo4.csv",
           row.names = FALSE)
 
 
