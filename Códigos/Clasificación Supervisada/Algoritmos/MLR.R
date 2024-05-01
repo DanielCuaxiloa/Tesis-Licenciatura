@@ -33,7 +33,7 @@ load("../Folds.RData")
 
 # Algoritmos de clasificación ---------------------------------------------
 
-MLR_1 <- function(Train, Test) {
+MLR.1 <- function(Train, Test) {
   
   lrm <- vglm(formula = Clase~.,
               family = multinomial(),
@@ -59,33 +59,7 @@ MLR_1 <- function(Train, Test) {
   
 }
 
-MLR_2 <- function(Train, Test) {
-  
-  lrm <- vglm(formula = Clase~.^2,
-              family = multinomial(),
-              data = Train)
-  
-  PredTrain_Probs <- predict(object = lrm,
-                             newdata = select(Train,-Clase),
-                             type = "response")
-  
-  PredTrain_Class <- data.frame(Clase = levels(Train$Clase)[max.col(PredTrain_Probs)])
-  
-  PredTest_Probs <- predict(object = lrm,
-                            newdata = select(Test,-Clase),
-                            type = "response")
-  
-  PredTest_Class <- data.frame(Clase = levels(Test$Clase)[max.col(PredTest_Probs)])
-  
-  MC.Train <- table(Train$Clase, PredTrain_Class$Clase)
-  MC.Test <- table(Test$Clase, PredTest_Class$Clase)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
-
-MLR_3 <- function(Train, Test) {
+MLR.2 <- function(Train, Test) {
   
   XTrain <- model.matrix(Clase~., 
                          data = Train)[,-1]
@@ -97,44 +71,8 @@ MLR_3 <- function(Train, Test) {
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
                          nfolds = 5,
-                         alpha = 0.8,
-                         lambda = seq(from = 0, to = 15, by = 0.1),
-                         type.measure = "class",
-                         family = "multinomial", 
-                         type.multinomial = "ungrouped")
-  
-  PredTrain <- predict(object = lasso.tun, 
-                       newx = XTrain, 
-                       type = "class", 
-                       s = "lambda.min")
-  
-  PredTest <- predict(object = lasso.tun, 
-                      newx = XTest, 
-                      type = "class", 
-                      s = "lambda.min")
-  
-  MC.Train <- table(Train$Clase, PredTrain)
-  MC.Test <- table(Test$Clase, PredTest)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
-
-MLR_4 <- function(Train, Test) {
-  
-  XTrain <- model.matrix(Clase~.^2, 
-                         data = Train)[,-1]
-  YTrain <- Train$Clase
-  
-  XTest <- model.matrix(Clase~.^2, 
-                        data = Test)[,-1]
-  
-  lasso.tun <- cv.glmnet(x = XTrain, 
-                         y = YTrain, 
-                         nfolds = 5,
-                         alpha = 0.8,
-                         lambda = seq(from = 0, to = 15, by = 0.1),
+                         alpha = 1,
+                         lambda = seq(from = 0, to = 20, by = 0.5),
                          type.measure = "class",
                          family = "multinomial", 
                          type.multinomial = "ungrouped")
@@ -160,38 +98,24 @@ MLR_4 <- function(Train, Test) {
 
 # Resultados --------------------------------------------------------------
 
-M1.MLR_1 <- Evaluacion(Metodo = "MLR_1", 
+M1.MLR.1 <- Evaluacion(Metodo = "MLR.1", 
                        workers = availableCores())
 
-M1.MLR_2 <- Evaluacion(Metodo = "MLR_2",
-                       workers = availableCores())
-
-M1.MLR_3 <- Evaluacion(Metodo = "MLR_3",
-                       workers = availableCores())
-
-M1.MLR_4 <- Evaluacion(Metodo = "MLR_4",
+M1.MLR.2 <- Evaluacion(Metodo = "MLR.2",
                        workers = availableCores())
 
 
 # Gráficas ----------------------------------------------------------------
 
-G.MLR_1 <- M1.MLR_1[["Global"]] %>% 
+G.MLR.1 <- M1.MLR.1[["Global"]] %>% 
   mutate(Modelo = "M1",
-         Nombre = "MLR_1")
+         Nombre = "MLR.1")
 
-G.MLR_2 <- M1.MLR_2[["Global"]] %>% 
+G.MLR.2 <- M1.MLR.2[["Global"]] %>% 
   mutate(Modelo = "M1",
-         Nombre = "MLR_2")
+         Nombre = "MLR.2")
 
-G.MLR_3 <- M1.MLR_3[["Global"]] %>% 
-  mutate(Modelo = "M1",
-         Nombre = "MLR_3")
-
-G.MLR_4 <- M1.MLR_4[["Global"]] %>% 
-  mutate(Modelo = "M1",
-         Nombre = "MLR_4")
-
-M1 <- bind_rows(G.MLR_1, G.MLR_2, G.MLR_3, G.MLR_4) %>% 
+M1 <- bind_rows(G.MLR.1, G.MLR.2) %>% 
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
@@ -200,10 +124,10 @@ ggplot(data = M1,
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
-mean(G.MLR_1$TestGlobal)
-mean(G.MLR_3$TestGlobal)
+mean(G.MLR.1$TestGlobal)
+mean(G.MLR.2$TestGlobal)
 
 write.csv(x = M1,
-          file = "Modelo_1.csv",
+          file = "Modelo1.csv",
           row.names = FALSE)
 

@@ -35,6 +35,10 @@ ggplot(data = Datos,
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
+reorder(x = Nombre,
+        X = TestClase2,
+        FUN = median)
+
 Datos %>% 
   group_by(Modelo, Nombre) %>% 
   summarise(TestGlobal = mean(TestGlobal),

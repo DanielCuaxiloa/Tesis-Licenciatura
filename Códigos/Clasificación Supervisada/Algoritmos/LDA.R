@@ -15,6 +15,7 @@ library(purrr)
 library(furrr)
 
 library(MASS)
+library(NetDA)
 
 library(ggplot2)
 
@@ -32,7 +33,7 @@ load("../Folds.RData")
 
 # Esquemas de clasificación -----------------------------------------------
 
-LDA_1 <- function(Train, Test) {
+LDA.1 <- function(Train, Test) {
   
   LDA <- lda(formula = Clase~., 
              data = Train)
@@ -51,46 +52,70 @@ LDA_1 <- function(Train, Test) {
   
 }
 
-LDA_2 <- function(Train, Test) {
+LDA.2 <- function(Train, Test) {
   
-  LDA <- lda(formula = Clase~.^2, 
-             data = Train)
+  X_Train <- Train %>% 
+    dplyr::select(-Clase) %>% 
+    as.matrix()
   
-  PredTrain <- predict(object = LDA,
-                       newdata = Train)$class
+  X_Test <- Test %>% 
+    dplyr::select(-Clase) %>% 
+    as.matrix()
   
-  PredTest <- predict(object = LDA,
-                      newdata = Test)$class
+  Y_Train <- Train %>% 
+    mutate(Clase = case_when(
+      Clase == "GTEX_B" ~ 1,
+      Clase == "TCGA_BLGG" ~ 2,
+      Clase == "TCGA_GM" ~ 3)) %>% 
+    dplyr::select(Clase) %>% 
+    as.matrix()
   
-  MC.Train <- table(Train$Clase, PredTrain)
-  MC.Test <- table(Test$Clase, PredTest)
+  Y_Test <- Test %>% 
+    mutate(Clase = case_when(
+      Clase == "GTEX_B" ~ 1,
+      Clase == "TCGA_BLGG" ~ 2,
+      Clase == "TCGA_GM" ~ 3)) %>% 
+    dplyr::select(Clase) %>% 
+    as.matrix()
+  
+  NetLDA.Train <- NetDA(X = X_Train,
+                        Y = Y_Train,
+                        method = 1,
+                        X_test = X_Train)
+  
+  NetLDA.Test <- NetDA(X = X_Train,
+                       Y = Y_Train,
+                       method = 1,
+                       X_test = X_Test)
+  
+  MC.Train <- table(Y_Train, NetLDA.Train$yhat)
+  MC.Test <- table(Y_Test, NetLDA.Test$yhat)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
   
 }
 
-
 # Resultados --------------------------------------------------------------
 
-M2.LDA_1 <- Evaluacion(Metodo = "LDA_1",
+M2.LDA.1 <- Evaluacion(Metodo = "LDA.1",
                        workers = availableCores())
 
-M2.LDA_2 <- Evaluacion(Metodo = "LDA_2", 
+M2.LDA.2 <- Evaluacion(Metodo = "LDA.2", 
                        workers = availableCores())
 
 
 # Gráficas ----------------------------------------------------------------
 
-G.LDA_1 <- M2.LDA_1[["Global"]] %>% 
+G.LDA.1 <- M2.LDA.1[["Global"]] %>% 
   mutate(Modelo = "M2",
-         Nombre = "LDA_1")
+         Nombre = "LDA.1")
 
-G.LDA_2 <- M2.LDA_2[["Global"]] %>% 
+G.LDA.2 <- M2.LDA.2[["Global"]] %>% 
   mutate(Modelo = "M2",
-         Nombre = "LDA_2")
+         Nombre = "LDA.2")
 
-M2 <- bind_rows(G.LDA_1, G.LDA_2) %>% 
+M2 <- bind_rows(G.LDA.1, G.LDA.2) %>% 
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
@@ -99,10 +124,10 @@ ggplot(data = M2,
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
-mean(G.LDA_1$TestGlobal)
-mean(G.LDA_2$TestGlobal)
+mean(G.LDA.1$TestGlobal)
+mean(G.LDA.2$TestGlobal)
 
 write.csv(x = M2,
-          file = "Modelo_2.csv",
+          file = "Modelo2.csv",
           row.names = FALSE)
 

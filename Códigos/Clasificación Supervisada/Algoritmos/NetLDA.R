@@ -144,12 +144,12 @@ M6 <- bind_rows(G.NetLDA, G.NetQDA) %>%
          Nombre = as.factor(Nombre))
 
 ggplot(data = M6,
-       mapping = aes(x = Nombre, y = TestGlobal)) +
+       mapping = aes(x = Nombre, y = TestClase2)) +
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
-mean(G.NetLDA$TestGlobal)
-mean(G.NetQDA$TestGlobal)
+mean(G.NetLDA$TestClase2)
+mean(G.NetQDA$TestClase2)
 
 write.csv(x = M6,
           file = "Modelo_6.csv",
