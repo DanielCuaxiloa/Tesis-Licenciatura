@@ -50,7 +50,7 @@ m1 <- rep(x = 0, times = ncol(S1))
 
 S2 <- S_MA1(rho = 0.5, p = 10)
 K2 <- solve(S2)
-m2 <- rep(x = 3, times = ncol(S2))
+m2 <- rep(x = 5, times = ncol(S2))
 
 set.seed(789)
 
@@ -62,18 +62,30 @@ muestra2 <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>%
   data.frame() %>% 
   mutate(Clase = 2)
 
-
-# glasso ------------------------------------------------------------------
-
-Network1 <- glasso(s = K1,
-                   rho = 0.1)
-
-Network1$wi
-
-
-# glasso LDA --------------------------------------------------------------
-
 Datos <- bind_rows(muestra1, muestra2) 
+
+# MASS --------------------------------------------------------------------
+
+## LDA
+Modelo.MASS.LDA <- lda(formula = Clase~.,
+                       data = Datos)
+
+Pred.MASS.LDA <- predict(object = Modelo.MASS.LDA,
+                         newdata = dplyr::select(Datos, -Clase))$class
+
+table(Datos$Clase, Pred.MASS.LDA)
+
+## QDA
+Pred.MASS.QDA <- qda(formula = Clase~.,
+                     data = Datos)
+
+Pred.MASS.QDA <- predict(object = Pred.MASS.QDA,
+                         newdata = dplyr::select(Datos, -Clase))$class
+
+table(Datos$Clase, Pred.MASS.QDA)
+
+
+# EBICglasso --------------------------------------------------------------
 
 X <- Datos %>% 
   dplyr::select(-Clase) %>% 
@@ -83,7 +95,6 @@ Y <- Datos %>%
   dplyr::select(Clase) %>% 
   as.matrix()
 
-rho <- 0.01
 class <- max(Y)
 n <- length(Y)
 p <- dim(X)[2]
@@ -102,17 +113,24 @@ for (i in 1:class) {
 ## Matriz de precisión para cada clase (QDA)
 Q_GLASSO <- NULL
 for (i in 1:class) {
-  s <- as.matrix(var(x[[i]]))
-  Theta_glasso <- glasso(s, rho = rho)$wi
+  Theta_glasso <- estimateNetwork(data = x[[i]],
+                                  default = "EBICglasso",
+                                  corMethod = "cor_auto",
+                                  tuning = 0.5)$graph
+  diag(Theta_glasso) <- 1
   Q_GLASSO[[i]] <- Theta_glasso
 }
 
-## Matriz de precisión asumiendo igualda (LDA)
-ls <- as.matrix(var(X))
-L_GLASSO <- glasso(ls, rho = rho)$wi
+## Matriz de precisión asumiendo igualdad (LDA)
+L_GLASSO <- estimateNetwork(data = X,
+                            default = "EBICglasso",
+                            corMethod = "cor_auto",
+                            tuning = 1)$graph
+diag(L_GLASSO) <- 1
 
 ## Predicciones
-predClass <- NULL
+predClass.LDA <- NULL
+predClass.QDA <- NULL
 X_test <- X
 n1 <- dim(X_test)[1]
 
@@ -126,9 +144,11 @@ n1 <- dim(X_test)[1]
                                                                                                     L_GLASSO %*% t(X_test)))
   }
   for (j in 1:n1) {
-    predClass <- c(predClass, which(Cmatrix[j, ] == max(Cmatrix[j,])))
+    predClass.LDA <- c(predClass.LDA, which(Cmatrix[j, ] == max(Cmatrix[j,])))
   }
 }
+
+table(Y, predClass.LDA)
 
 ## QDA
 {
@@ -140,49 +160,61 @@ n1 <- dim(X_test)[1]
                                    Q_GLASSO[[i]] %*% (as.matrix(t(X_test) - meanx[[i]]))))
   }
   for (j in 1:n1) {
-    predClass = c(predClass, which(Cmatrix[j, ] == max(Cmatrix[j, 
-    ])))
+    predClass.QDA = c(predClass.QDA, which(Cmatrix[j, ] == max(Cmatrix[j,])))
   }
 }
 
-Modelo1 <- NetDA(X = X,
-                 Y = Y,
-                 method = 1,
-                 X_test = X)
+table(Y, predClass.QDA)
 
-table(Y,Modelo1$yhat)
 
-Modelo2 <- NetDA(X = X,
-                 Y = Y,
-                 method = 2,
-                 X_test = X)
+# NetDA -------------------------------------------------------------------
 
-table(Y,Modelo2$yhat)
+Modelo.NetDA.LDA <- NetDA(X = X,
+                          Y = Y,
+                          method = 1,
+                          X_test = X)
 
-# EBICglasso --------------------------------------------------------------
+table(Y, Modelo.NetDA.LDA$yhat)
 
-Network1 <- estimateNetwork(data = dplyr::select(muestra1, -Clase),
-                            default = "EBICglasso",
-                            corMethod = "cor_auto",
-                            tuning = 0.5)
+Modelo.NetDA.QDA <- NetDA(X = X,
+                          Y = Y,
+                          method = 2,
+                          X_test = X)
 
-Network2 <- estimateNetwork(data = dplyr::select(muestra2, -Clase),
-                            default = "EBICglasso",
-                            corMethod = "cor_auto",
-                            tuning = 0.5)
+table(Y, Modelo.NetDA.QDA$yhat)
 
-plot(Network1,
+
+# Análisis ----------------------------------------------------------------
+
+Network1 <- glasso(s = S1,
+                   rho = 0.1)
+
+Network2 <- glasso(s = S2,
+                   rho = 0.1)
+
+Network1$wi
+
+Network2$wi
+
+Network1.1 <- estimateNetwork(data = dplyr::select(muestra1, -Clase),
+                              default = "EBICglasso",
+                              corMethod = "cor_auto",
+                              tuning = 0.5)
+
+Network2.1 <- estimateNetwork(data = dplyr::select(muestra2, -Clase),
+                              default = "EBICglasso",
+                              corMethod = "cor_auto",
+                              tuning = 0.5)
+
+plot(Network1.1,
      layout = "circle",
      edge.labels = FALSE,
      label.prop = 1,
      font = 2)
 
-plot(Network2,
+plot(Network2.1,
      layout = "circle",
      edge.labels = FALSE,
      label.prop = 1,
      font = 2)
-
-
-
 
