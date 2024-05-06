@@ -29,7 +29,7 @@ Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5, Modelo6) %>%
   select(-ID1)
 
 ggplot(data = Datos,
-       mapping = aes(x = Nombre, y = TestClase2)) +
+       mapping = aes(x = Nombre, y = TestGlobal)) +
   facet_grid(cols = vars(Modelo), 
              scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 
@@ -41,7 +41,7 @@ Datos %>%
             TestClase1 = mean(TestClase1),
             TestClase2 = mean(TestClase2),
             TestClase3 = mean(TestClase3)) %>% 
-  arrange(desc(TestClase2)) %>% 
+  arrange(desc(TestGlobal)) %>% 
   ungroup()
 
 
