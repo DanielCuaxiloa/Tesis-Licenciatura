@@ -25,6 +25,8 @@ library(readr)
 
 source("../FuncionesAuxiliares.R")
 
+source("../../Network Discriminant Analysis/NetQDA.R")
+
 
 # Conjuntos Train y Test --------------------------------------------------
 
@@ -96,6 +98,25 @@ QDA.2 <- function(Train, Test) {
   
 }
 
+QDA.3 <- function(Train, Test) {
+  
+  NetQDA <- NetQDA(formula = Clase~., 
+                   datos = Train,
+                   rho = 0.01)
+  
+  PredTrain <- Predict.NetQDA(object = NetQDA,
+                              NewData = dplyr::select(Train, -Clase))
+  
+  PredTest <- Predict.NetQDA(object = NetQDA,
+                             NewData = dplyr::select(Test, -Clase))
+  
+  MC.Train <- table(Train$Clase, PredTrain$clase_predicha$.)
+  MC.Test <- table(Test$Clase, PredTest$clase_predicha$.)
+  
+  return(list(MC.Train = MC.Train,
+              MC.Test = MC.Test))
+  
+}
 
 # Resultados --------------------------------------------------------------
 
@@ -103,6 +124,9 @@ M3.QDA.1 <- Evaluacion(Metodo = "QDA.1",
                        workers = availableCores())
 
 M3.QDA.2 <- Evaluacion(Metodo = "QDA.2", 
+                       workers = availableCores())
+
+M3.QDA.3 <- Evaluacion(Metodo = "QDA.3", 
                        workers = availableCores())
 
 
@@ -116,7 +140,11 @@ G.QDA.2 <- M3.QDA.2[["Global"]] %>%
   mutate(Modelo = "M3",
          Nombre = "QDA.2")
 
-M3 <- bind_rows(G.QDA.1, G.QDA.2) %>% 
+G.QDA.3 <- M3.QDA.3[["Global"]] %>% 
+  mutate(Modelo = "M3",
+         Nombre = "QDA.3")
+
+M3 <- bind_rows(G.QDA.1, G.QDA.2, G.QDA.3) %>% 
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
@@ -127,6 +155,7 @@ ggplot(data = M3,
 
 mean(G.QDA.1$TestGlobal)
 mean(G.QDA.2$TestGlobal)
+mean(G.QDA.3$TestGlobal)
 
 write.csv(x = M3,
           file = "Modelo3.csv",
