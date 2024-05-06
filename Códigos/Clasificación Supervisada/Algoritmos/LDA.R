@@ -26,8 +26,6 @@ library(readr)
 
 source("../FuncionesAuxiliares.R")
 
-source("NetQDA.R")
-
 
 # Conjuntos Train y Test --------------------------------------------------
 
