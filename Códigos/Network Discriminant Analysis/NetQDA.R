@@ -1,4 +1,9 @@
 
+###########################################
+# Network Quadratic Discriminant Analysis #
+# Network QDA                             #
+###########################################
+
 NetQDA <- function(formula, datos, rho) {
   
   # Verificar que el argumento 'formula' sea realmente una fórmula
@@ -66,7 +71,7 @@ NetQDA <- function(formula, datos, rho) {
               omega = Omega))
 }
 
-Predict.NeQLDA <- function(object, NewData){
+Predict.NetQDA <- function(object, NewData){
   
   NewData <- as.matrix(NewData)
   mu <- object$mu
@@ -82,7 +87,7 @@ Predict.NeQLDA <- function(object, NewData){
   probabilidades <- matrix(NA, nrow = num_obs, ncol = num_clases)
   for (j in 1:num_clases) {
     # Calcular la función discriminante para la clase j
-    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - mu[[j]]) %*% Omega[[j]] * (NewData - mu[[j]]))
+    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - rep(mu[[j]], each = num_obs)) %*% Omega[[j]] * (NewData - rep(mu[[j]], each = num_obs)))
     
     # Almacenar la función discriminante en la matriz de probabilidades
     probabilidades[, j] <- delta

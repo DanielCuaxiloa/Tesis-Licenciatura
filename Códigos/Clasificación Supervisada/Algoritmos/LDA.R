@@ -21,11 +21,13 @@ library(ggplot2)
 
 library(readr)
 
+
 # Funciones Auxiliares ----------------------------------------------------
 
 source("../FuncionesAuxiliares.R")
 
 source("NetQDA.R")
+
 
 # Conjuntos Train y Test --------------------------------------------------
 
@@ -97,25 +99,6 @@ LDA.2 <- function(Train, Test) {
   
 }
 
-LDA.3 <- function(Train, Test) {
-  
-  LDA <- NetQDA(formula = Clase~.,
-                datos = Train,
-                rho = 0.01)
-  
-  PredTrain <- Predict.NeQLDA(object = LDA,
-                              NewData = Train)
-  
-  PredTest <- Predict.NeQLDA(object = LDA,
-                             NewData = Test)
-  
-  MC.Train <- table(Train$Clase, PredTrain$clase_predicha$.)
-  MC.Test <- table(Test$Clase, PredTest$clase_predicha$.)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
 
 # Resultados --------------------------------------------------------------
 
@@ -123,9 +106,6 @@ M2.LDA.1 <- Evaluacion(Metodo = "LDA.1",
                        workers = availableCores())
 
 M2.LDA.2 <- Evaluacion(Metodo = "LDA.2", 
-                       workers = availableCores())
-
-M2.LDA.3 <- Evaluacion(Metodo = "LDA.3", 
                        workers = availableCores())
 
 
