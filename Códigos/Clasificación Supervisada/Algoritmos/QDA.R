@@ -37,7 +37,7 @@ load("../Folds.RData")
 
 QDA.1 <- function(Train, Test) {
   
-  QDA <- qda(formula = Clase~., 
+  QDA <- qda(formula = Clase~.,
              data = Train)
   
   PredTrain <- predict(object = QDA,
@@ -100,9 +100,15 @@ QDA.2 <- function(Train, Test) {
 
 QDA.3 <- function(Train, Test) {
   
+  rho.tune <- tune_rho_NetQDA(formula = Clase~.,
+                              datos = Train,
+                              prior_prob = c(1/3,1/3,1/3),
+                              rhos = seq(0.1, 1, by = 0.001))
+  
   NetQDA <- NetQDA(formula = Clase~., 
                    datos = Train,
-                   rho = 0.01)
+                   rho = rho.tune$best_rho,
+                   prior_prob = c(1/3,1/3,1/3))
   
   PredTrain <- Predict.NetQDA(object = NetQDA,
                               NewData = dplyr::select(Train, -Clase))

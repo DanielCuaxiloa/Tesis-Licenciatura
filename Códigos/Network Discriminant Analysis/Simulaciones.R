@@ -2,6 +2,7 @@
 library(MASS)
 library(dplyr)
 
+
 # Estructuras -------------------------------------------------------------
 
 AR1 <- function(rho, p){
@@ -75,9 +76,10 @@ muestra2.Test <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>%
 Datos_Test <- bind_rows(muestra1.Test, 
                         muestra2.Test) 
 
+
 # Función NetQDA ----------------------------------------------------------
 
-NetQDA <- function(formula, datos, rho) {
+NetQDA <- function(formula, datos, rho, prior_prob = NULL) {
   
   # Verificar que el argumento 'formula' sea realmente una fórmula
   if (!inherits(formula, "formula")) {
@@ -116,7 +118,14 @@ NetQDA <- function(formula, datos, rho) {
   names(mu) <- niveles_y
   
   # Calcular las probabilidades a priori por cada clase
-  pi <- as.list(table(y)/length(y))
+  if (is.null(prior_prob)) {
+    pi <- as.list(table(y)/length(y))
+  } else {
+    if (length(prior_prob) != length(niveles_y)) {
+      stop("El número de probabilidades a priori proporcionadas no coincide con el número de clases en la variable de respuesta.")
+    }
+    pi <- as.list(prior_prob / sum(prior_prob))
+  }
   
   # Asignar nombres a las listas basados en los niveles de la variable de respuesta
   names(pi) <- niveles_y
@@ -185,12 +194,68 @@ Predict.NetQDA <- function(object, NewData){
   
 }
 
+tune_rho_NetQDA <- function(formula, datos, prior_prob = NULL, rhos, nfolds = 5) {
+  
+  # Extraer la variable de respuesta y los predictores
+  respuesta <- as.character(formula[[2]])
+  
+  # Crear un data frame para almacenar los resultados de la validación cruzada
+  cv_results <- data.frame(rho = rhos, accuracy = rep(NA, length(rhos)))
+  
+  # Dividir los datos en nfolds conjuntos de entrenamiento y prueba
+  set.seed(123)
+  folds <- caret::createFolds(datos[[respuesta]], k = nfolds)
+  
+  for (i in 1:length(rhos)) {
+    # Inicializar la precisión promedio para este rho
+    avg_accuracy <- 0
+    
+    # Realizar validación cruzada
+    for (fold in folds) {
+      
+      MC <- NULL
+      
+      # Conjunto de entrenamiento
+      train_data <- datos[-fold, ]
+      # Conjunto de prueba
+      test_data <- datos[fold, ]
+      
+      # Ajustar el modelo en el conjunto de entrenamiento
+      model <- NetQDA(formula, prior_prob = prior_prob, train_data, rhos[i])
+      
+      # Realizar predicciones en el conjunto de prueba
+      predictions <- Predict.NetQDA(model, test_data[, -which(names(datos) == respuesta)])
+      
+      MC <- table(test_data[[respuesta]], predictions$clase_predicha$.)
+      
+      # Calcular la precisión
+      accuracy <- sum(diag(MC))/sum(MC)
+      
+      # Agregar la precisión al promedio
+      avg_accuracy <- avg_accuracy + accuracy
+    }
+    
+    # Calcular la precisión promedio para este rho
+    cv_results$accuracy[i] <- avg_accuracy / nfolds
+  }
+  
+  # Encontrar el valor de rho que maximiza la precisión
+  best_rho <- cv_results$rho[which.max(cv_results$accuracy)]
+  
+  # Devolver los resultados de la validación cruzada y el mejor rho encontrado
+  return(list(cv_results = cv_results, best_rho = best_rho))
+}
+
 
 # Comparación MASS v.s NetQDA ----------------------------------------------
 
+rho.tune <- tune_rho_NetQDA(formula = Clase~.,
+                            datos = Datos_Train,
+                            rhos = seq(0.1, 1, by = 0.001))
+
 Modelo.NetQDA <- NetQDA(formula = Clase~.,
                         datos = Datos_Train,
-                        rho = 0.05)
+                        rho = rho.tune$best_rho)
 
 Pred.NetQDA <- Predict.NetQDA(object = Modelo.NetQDA,
                               NewData = select(Datos_Test, -Clase))
@@ -206,4 +271,3 @@ MC.QDA <- table(Datos_Test$Clase, Pred.QDA)
 
 sum(diag(MC.NetQDA))/sum(MC.NetQDA)
 sum(diag(MC.QDA))/sum(MC.QDA)
-
