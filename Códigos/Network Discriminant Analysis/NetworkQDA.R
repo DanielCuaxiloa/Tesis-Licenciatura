@@ -92,15 +92,15 @@ RAND <- function(alpha, p) {
 
 # Simulaciones ------------------------------------------------------------
 
-S1 <- RAND(alpha = 0.5, p = 30)
+S1 <- RAND(alpha = 1, p = 30)
 K1 <- solve(S1)
 m1 <- rep(x = 0, times = ncol(S1))
 
-S2 <- RAND(alpha = 1, p = 30)
+S2 <- RAND(alpha = 1.5, p = 30)
 K2 <- solve(S2)
 m2 <- rep(x = 0, times = ncol(S2))
 
-S3 <- RAND(alpha = 1.5, p = 30)
+S3 <- RAND(alpha = 2, p = 30)
 K3 <- solve(S3)
 m3 <- rep(x = 0, times = ncol(S3))
 
@@ -109,15 +109,15 @@ m3 <- rep(x = 0, times = ncol(S3))
 
 set.seed(123)
 
-muestra1.Train <- mvrnorm(n = 500, mu = m1, Sigma = S1) %>% 
+muestra1.Train <- mvrnorm(n = 50, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Train <- mvrnorm(n = 500, mu = m2, Sigma = S2) %>% 
+muestra2.Train <- mvrnorm(n = 50, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Train <- mvrnorm(n = 500, mu = m3, Sigma = S3) %>% 
+muestra3.Train <- mvrnorm(n = 50, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
@@ -344,4 +344,15 @@ network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
+network.estimate.Clase2 <- estimateNetwork(data = select(muestra2.Train,-Clase),
+                                           default = "EBICglasso",
+                                           tuning = 0)
+
+network.estimate.Clase3 <- estimateNetwork(data = select(muestra3.Train,-Clase),
+                                           default = "EBICglasso",
+                                           tuning = 0)
+
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
 plot(network.estimate.Clase1)
+plot(network.estimate.Clase2)
+plot(network.estimate.Clase3)
