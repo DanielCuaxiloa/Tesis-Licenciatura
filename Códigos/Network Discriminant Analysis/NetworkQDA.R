@@ -4,6 +4,7 @@
 ###############
 
 library(igraph)
+library(qgraph)
 library(bootnet)
 library(MASS)
 library(dplyr)
@@ -85,22 +86,27 @@ RAND <- function(alpha, p) {
     }
   }
   
-  return(S)
+  return(list(S = S,
+              network = network))
   
 }
 
 
 # Simulaciones ------------------------------------------------------------
 
-S1 <- RAND(alpha = 1, p = 30)
+RAND.1 <- RAND(alpha = 1, p = 30)
+RAND.2 <- RAND(alpha = 1.1, p = 30)
+RAND.3 <- RAND(alpha = 1.2, p = 30)
+
+S1 <- RAND.1$S
 K1 <- solve(S1)
 m1 <- rep(x = 0, times = ncol(S1))
 
-S2 <- RAND(alpha = 1.5, p = 30)
+S2 <- RAND.2$S
 K2 <- solve(S2)
 m2 <- rep(x = 0, times = ncol(S2))
 
-S3 <- RAND(alpha = 2, p = 30)
+S3 <- RAND.3$S
 K3 <- solve(S3)
 m3 <- rep(x = 0, times = ncol(S3))
 
@@ -109,15 +115,15 @@ m3 <- rep(x = 0, times = ncol(S3))
 
 set.seed(123)
 
-muestra1.Train <- mvrnorm(n = 50, mu = m1, Sigma = S1) %>% 
+muestra1.Train <- mvrnorm(n = 100, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Train <- mvrnorm(n = 50, mu = m2, Sigma = S2) %>% 
+muestra2.Train <- mvrnorm(n = 100, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Train <- mvrnorm(n = 50, mu = m3, Sigma = S3) %>% 
+muestra3.Train <- mvrnorm(n = 100, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
@@ -339,6 +345,17 @@ MC.QDA <- table(Datos.Test$Clase, Pred.QDA)
 
 sum(diag(MC.NetQDA))/sum(MC.NetQDA)
 sum(diag(MC.QDA))/sum(MC.QDA)
+
+
+# Plot 1 ------------------------------------------------------------------
+
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(RAND.1$network)
+plot(RAND.2$network)
+plot(RAND.3$network)
+
+
+# Plot 2 ------------------------------------------------------------------
 
 network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train,-Clase),
                                            default = "EBICglasso",
