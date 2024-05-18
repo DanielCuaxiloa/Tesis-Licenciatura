@@ -115,15 +115,15 @@ m3 <- rep(x = 0, times = ncol(S3))
 
 set.seed(123)
 
-muestra1.Train <- mvrnorm(n = 100, mu = m1, Sigma = S1) %>% 
+muestra1.Train <- mvrnorm(n = 50, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Train <- mvrnorm(n = 100, mu = m2, Sigma = S2) %>% 
+muestra2.Train <- mvrnorm(n = 50, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Train <- mvrnorm(n = 100, mu = m3, Sigma = S3) %>% 
+muestra3.Train <- mvrnorm(n = 50, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
