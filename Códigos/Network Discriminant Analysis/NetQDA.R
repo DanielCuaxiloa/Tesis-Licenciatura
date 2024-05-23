@@ -4,136 +4,128 @@
 # Network QDA                             #
 ###########################################
 
-NetQDA <- function(formula, datos, rho, prior_prob = NULL) {
+NetQDA <- function(formula, data, rho, prior = NULL) {
   
-  # Verificar que el argumento 'formula' sea realmente una fórmula
+  etiqueta <- as.character(formula[[2]])
+  
   if (!inherits(formula, "formula")) {
-    stop("El argumento 'formula' debe ser del tipo formula.")
+    stop("El argumento 'formula' debe ser tipo formula")
   }
   
-  # Verificar que 'datos' sea un data.frame
-  if (!is.data.frame(datos)) {
+  if (!is.data.frame(data)) {
     stop("El argumento 'datos' debe ser un data.frame.")
   }
   
-  # Extraer la variable de respuesta y los predictores
-  respuesta <- as.character(formula[[2]])
-  
   # Si el lado derecho de la fórmula es '.', usar todas las otras columnas como predictores
   if (length(formula[[3]]) == 1 && as.character(formula[[3]]) == ".") {
-    predictores <- setdiff(names(datos), respuesta)
-    formula <- reformulate(predictores, response = respuesta)
+    predictores <- setdiff(names(data), etiqueta)
+    formula <- reformulate(predictores, response = etiqueta)
   }
   
-  # Extraer el vector de respuesta
-  y <- as.factor(datos[[respuesta]])
+  # Vector de etiquetas
+  y <- as.factor(data[[etiqueta]])
   
-  # Construir la matriz de diseño X usando model.matrix para asegurar correcto manejo de factores
-  X <- model.matrix(formula, datos)[,-1]  # Excluye la columna intercepto si no se necesita
+  # Matriz de diseño sin intercepto
+  X <- model.matrix(formula, data)[,-1]
   
-  # Obtener los niveles únicos de la variable de respuesta
-  niveles_y <- unique(y)
+  # Niveles únicos de la variable y
+  niveles.y <- unique(y)
   
-  # Calcular las medias de cada variable en X agrupadas por las clases de Y
-  mu <- lapply(niveles_y, function(nivel) {
+  # Medias de cada variable en X agrupadas por las clases de y
+  mu <- lapply(niveles.y, function(nivel) {
     colMeans(X[y == nivel, , drop = FALSE])
   })
   
-  # Asignar nombres a las listas basados en los niveles de la variable de respuesta
-  names(mu) <- niveles_y
-  
-  # Calcular las probabilidades a priori por cada clase
-  if (is.null(prior_prob)) {
+  # Probabilidades a priori por cada clase
+  if (is.null(prior)) {
     pi <- as.list(table(y)/length(y))
   } else {
-    if (length(prior_prob) != length(niveles_y)) {
-      stop("El número de probabilidades a priori proporcionadas no coincide con el número de clases en la variable de respuesta.")
+    if (length(prior) != length(niveles.y)) {
+      stop("El número de probabilidades a priori no coincide con el número de clases en la variable de y")
     }
-    pi <- as.list(prior_prob / sum(prior_prob))
+    pi <- as.list(prior/sum(prior))
   }
   
-  # Asignar nombres a las listas basados en los niveles de la variable de respuesta
-  names(pi) <- niveles_y
-  
-  # Calcular las matrices de covarianza por cada clase
-  Sigma <- lapply(niveles_y, function(nivel) {
+  # Matriz de covarianza por cada clase
+  Sigma <- lapply(niveles.y, function(nivel) {
     as.matrix(var(X[y == nivel, , drop = FALSE]))
   })
   
-  names(Sigma) <- niveles_y
-  
-  # Aplicar glasso() a cada matriz de covarianza
+  # Matriz de precisión por cada clase
   Omega <- lapply(Sigma, function(sigma) {
     glasso::glasso(sigma, rho = rho)$wi
   })
   
-  # Asignar nombres a las listas basados en los niveles de la variable de respuesta
-  names(Omega) <- niveles_y
+  # Asignar nombres de las clases
+  names(mu) <- niveles.y
   
-  # Devolver los resultados como una lista de medias con nombres
-  return(list(y = y, X = X, 
-              mu = mu, 
-              pi = pi, 
-              sigma = Sigma,
-              omega = Omega))
+  names(pi) <- niveles.y
+  
+  names(Sigma) <- niveles.y
+  
+  names(Omega) <- niveles.y
+  
+  # Estimaciones
+  return(list(mu = mu, pi = pi, sigma = Sigma, omega = Omega))
 }
 
-Predict.NetQDA <- function(object, NewData){
+predict.NetQDA <- function(object, newdata){
   
-  NewData <- as.matrix(NewData)
+  NewData <- as.matrix(newdata)
   mu <- object$mu
   pi <- object$pi
   Sigma <- object$sigma
   Omega <- object$omega
   
-  # Calcular el número de clases y observaciones
-  num_clases <- length(mu)
-  num_obs <- nrow(NewData)
+  # Número de clases y observaciones
+  num.clases <- length(mu)
+  num.obs <- nrow(NewData)
   
-  # Calcular las probabilidades de pertenecer a cada clase para cada observación
-  probabilidades <- matrix(NA, nrow = num_obs, ncol = num_clases)
-  for (j in 1:num_clases) {
-    # Calcular la función discriminante para la clase j
-    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - rep(mu[[j]], each = num_obs)) %*% Omega[[j]] * (NewData - rep(mu[[j]], each = num_obs)))
+  # Probabilidades de pertenecer a cada clase para cada observación
+  probabilidades <- matrix(NA, nrow = num.obs, ncol = num.clases)
+  
+  for (j in 1:num.clases) {
     
-    # Almacenar la función discriminante en la matriz de probabilidades
+    # Función discriminante para la clase j
+    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - rep(mu[[j]], each = num.obs)) %*% Omega[[j]] * (NewData - rep(mu[[j]], each = num.obs)))
+    
+    # Matriz de probabilidades
     probabilidades[, j] <- delta
+    
   }
   
-  # Calcular las probabilidades normalizadas
+  # Probabilidades normalizadas
   probabilidades <- exp(probabilidades)
-  probabilidades <- probabilidades / rowSums(probabilidades)
+  probabilidades <- data.frame(probabilidades = probabilidades/rowSums(probabilidades))
   
-  # Obtener el nombre de las clases
-  nombres_clases <- names(pi)
+  # Nombre de las clases
+  nombres.clases <- names(pi)
   
-  # Obtener la clase predicha para cada observación con los nombres de las clases
-  clase_predicha <- apply(probabilidades, 1, function(x) nombres_clases[which.max(x)]) %>% 
-    as.data.frame()
+  # Clase predicha para cada observación con los nombres de las clases
+  clase.predicha <- data.frame(yhat = apply(probabilidades, 1, function(x) nombres.clases[which.max(x)]))
   
-  colnames(probabilidades) <- nombres_clases
+  colnames(probabilidades) <- nombres.clases
   
-  # Devolver la probabilidad estimada y la clase predicha
+  # Probabilidad estimada y clase predicha
   return(list(probabilidad = probabilidades, 
-              clase_predicha = clase_predicha))
+              clase = clase.predicha))
   
 }
 
-tune_rho_NetQDA <- function(formula, datos, prior_prob = NULL, rhos, nfolds = 5) {
+tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
   
-  # Extraer la variable de respuesta y los predictores
-  respuesta <- as.character(formula[[2]])
+  etiqueta <- as.character(formula[[2]])
   
-  # Crear un data frame para almacenar los resultados de la validación cruzada
-  cv_results <- data.frame(rho = rhos, accuracy = rep(NA, length(rhos)))
+  # Resultados de la validación cruzada
+  cv.results <- data.frame(rho = rhos, accuracy = rep(NA, length(rhos)))
   
-  # Dividir los datos en nfolds conjuntos de entrenamiento y prueba
+  # Subconjuntos (folds) de entrenamiento y validación
   set.seed(123)
-  folds <- caret::createFolds(datos[[respuesta]], k = nfolds)
+  folds <- caret::createFolds(data[[etiqueta]], k = nfolds)
   
   for (i in 1:length(rhos)) {
-    # Inicializar la precisión promedio para este rho
-    avg_accuracy <- 0
+    
+    avg.accuracy <- 0
     
     # Realizar validación cruzada
     for (fold in folds) {
@@ -141,32 +133,33 @@ tune_rho_NetQDA <- function(formula, datos, prior_prob = NULL, rhos, nfolds = 5)
       MC <- NULL
       
       # Conjunto de entrenamiento
-      train_data <- datos[-fold, ]
+      train <- data[-fold, ]
+      
       # Conjunto de prueba
-      test_data <- datos[fold, ]
+      val <- data[fold, ]
       
-      # Ajustar el modelo en el conjunto de entrenamiento
-      model <- NetQDA(formula, prior_prob = prior_prob, train_data, rhos[i])
+      # Modelo
+      model <- NetQDA(formula, prior = prior, train, rhos[i])
       
-      # Realizar predicciones en el conjunto de prueba
-      predictions <- Predict.NetQDA(model, test_data[, -which(names(datos) == respuesta)])
+      # Predicciones
+      predictions <- predict.NetQDA(model, val[, -which(names(data) == etiqueta)])
       
-      MC <- table(test_data[[respuesta]], predictions$clase_predicha$.)
+      MC <- table(val[[etiqueta]], predictions$clase$yhat)
       
-      # Calcular la precisión
+      # Precisión
       accuracy <- sum(diag(MC))/sum(MC)
       
-      # Agregar la precisión al promedio
-      avg_accuracy <- avg_accuracy + accuracy
+      # Precisión acumulada
+      avg.accuracy <- avg.accuracy + accuracy
     }
     
-    # Calcular la precisión promedio para este rho
-    cv_results$accuracy[i] <- avg_accuracy / nfolds
+    # Precisión promedio
+    cv.results$accuracy[i] <- avg.accuracy/nfolds
   }
   
-  # Encontrar el valor de rho que maximiza la precisión
-  best_rho <- cv_results$rho[which.max(cv_results$accuracy)]
+  # Valor de rho que maximiza la precisión
+  best.rho <- cv.results$rho[which.max(cv.results$accuracy)]
   
-  # Devolver los resultados de la validación cruzada y el mejor rho encontrado
-  return(list(cv_results = cv_results, best_rho = best_rho))
+  # Resultados
+  return(list(cv.results = cv.results, best.rho = best.rho))
 }
