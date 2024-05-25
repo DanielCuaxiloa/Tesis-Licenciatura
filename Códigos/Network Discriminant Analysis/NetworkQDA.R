@@ -94,9 +94,9 @@ RAND <- function(alpha, p) {
 
 # Simulaciones ------------------------------------------------------------
 
-RAND.1 <- RAND(alpha = 1, p = 50)
-RAND.2 <- RAND(alpha = 1.1, p = 50)
-RAND.3 <- RAND(alpha = 1.2, p = 50)
+RAND.1 <- RAND(alpha = 1, p = 30)
+RAND.2 <- RAND(alpha = 1.1, p = 30)
+RAND.3 <- RAND(alpha = 1.2, p = 30)
 
 S1 <- RAND.1$S
 K1 <- solve(S1)
@@ -115,21 +115,59 @@ m3 <- rep(x = 0, times = ncol(S3))
 
 set.seed(123)
 
-muestra1.Train <- mvrnorm(n = 100, mu = m1, Sigma = S1) %>% 
+## n = 50
+
+muestra1.Train1 <- mvrnorm(n = 50, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Train <- mvrnorm(n = 100, mu = m2, Sigma = S2) %>% 
+muestra2.Train1 <- mvrnorm(n = 50, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Train <- mvrnorm(n = 100, mu = m3, Sigma = S3) %>% 
+muestra3.Train1 <- mvrnorm(n = 50, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
-Datos.Train <- bind_rows(muestra1.Train, 
-                         muestra2.Train,
-                         muestra3.Train) 
+Datos.Train1 <- bind_rows(muestra1.Train1, 
+                          muestra2.Train1,
+                          muestra3.Train1) 
+
+## n = 100
+
+muestra1.Train2 <- mvrnorm(n = 100, mu = m1, Sigma = S1) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase1"))
+
+muestra2.Train2 <- mvrnorm(n = 100, mu = m2, Sigma = S2) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase2"))
+
+muestra3.Train2 <- mvrnorm(n = 100, mu = m3, Sigma = S3) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase3"))
+
+Datos.Train2 <- bind_rows(muestra1.Train2, 
+                          muestra2.Train2,
+                          muestra3.Train2)
+
+## n = 1000
+
+muestra1.Train3 <- mvrnorm(n = 1000, mu = m1, Sigma = S1) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase1"))
+
+muestra2.Train3 <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase2"))
+
+muestra3.Train3 <- mvrnorm(n = 1000, mu = m3, Sigma = S3) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase3"))
+
+Datos.Train3 <- bind_rows(muestra1.Train3, 
+                          muestra2.Train3,
+                          muestra3.Train3) 
 
 
 # Test --------------------------------------------------------------------
@@ -161,33 +199,109 @@ source("NetQDA.R")
 
 # Comparación MASS v.s NetQDA ----------------------------------------------
 
-rho.tune <- tune.rho(formula = Clase~.,
-                     data = Datos.Train,
-                     rhos = seq(0, 1, by = 0.01),
-                     nfolds = 5)
+rho.tune1 <- tune.rho(formula = Clase~.,
+                      data = Datos.Train1,
+                      rhos = seq(0, 1, by = 0.01),
+                      nfolds = 5)
 
-plot(rho.tune[["cv.results"]]$rho,rho.tune[["cv.results"]]$accuracy)
-rho.tune$best.rho
+rho.tune2 <- tune.rho(formula = Clase~.,
+                      data = Datos.Train2,
+                      rhos = seq(0, 1, by = 0.01),
+                      nfolds = 5)
 
-Modelo.NetQDA <- NetQDA(formula = Clase~.,
-                        data = Datos.Train,
-                        rho = rho.tune$best.rho)
+rho.tune3 <- tune.rho(formula = Clase~.,
+                      data = Datos.Train3,
+                      rhos = seq(0, 1, by = 0.01),
+                      nfolds = 5)
 
-Pred.NetQDA <- predict.NetQDA(object = Modelo.NetQDA,
-                              newdata = select(Datos.Test, -Clase))
+plot(rho.tune1[["cv.results"]]$rho,
+     rho.tune1[["cv.results"]]$accuracy)
 
-Modelo.QDA <- qda(formula = Clase~.,
-                  data = Datos.Train)
+plot(rho.tune2[["cv.results"]]$rho,
+     rho.tune2[["cv.results"]]$accuracy)
 
-Pred.QDA <- predict(object = Modelo.QDA,
+plot(rho.tune3[["cv.results"]]$rho,
+     rho.tune3[["cv.results"]]$accuracy)
+
+rho.tune1$best.rho
+rho.tune2$best.rho
+rho.tune3$best.rho
+
+
+Modelo1.NetQDA <- NetQDA(formula = Clase~.,
+                         data = Datos.Train1,
+                         rho = rho.tune1$best.rho)
+
+Modelo2.NetQDA <- NetQDA(formula = Clase~.,
+                         data = Datos.Train2,
+                         rho = rho.tune2$best.rho)
+
+Modelo3.NetQDA <- NetQDA(formula = Clase~.,
+                         data = Datos.Train3,
+                         rho = rho.tune3$best.rho)
+
+Pred1.NetQDA <- predict.NetQDA(object = Modelo1.NetQDA,
+                               newdata = select(Datos.Test, -Clase))
+
+Pred2.NetQDA <- predict.NetQDA(object = Modelo2.NetQDA,
+                               newdata = select(Datos.Test, -Clase))
+
+Pred3.NetQDA <- predict.NetQDA(object = Modelo3.NetQDA,
+                               newdata = select(Datos.Test, -Clase))
+
+Modelo1.QDA <- qda(formula = Clase~.,
+                   data = Datos.Train1)
+
+Modelo2.QDA <- qda(formula = Clase~.,
+                   data = Datos.Train2)
+
+Modelo3.QDA <- qda(formula = Clase~.,
+                   data = Datos.Train3)
+
+Pred1.QDA <- predict(object = Modelo1.QDA,
                     newdata = select(Datos.Test, -Clase))$class
 
-MC.NetQDA <- table(Datos.Test$Clase, Pred.NetQDA$clase$yhat)
-MC.QDA <- table(Datos.Test$Clase, Pred.QDA)
+Pred2.QDA <- predict(object = Modelo2.QDA,
+                     newdata = select(Datos.Test, -Clase))$class
 
-sum(diag(MC.NetQDA))/sum(MC.NetQDA)
-sum(diag(MC.QDA))/sum(MC.QDA)
+Pred3.QDA <- predict(object = Modelo3.QDA,
+                     newdata = select(Datos.Test, -Clase))$class
 
+MC1.NetQDA <- table(Datos.Test$Clase, Pred1.NetQDA$clase$yhat)
+MC1.QDA <- table(Datos.Test$Clase, Pred1.QDA)
+
+MC2.NetQDA <- table(Datos.Test$Clase, Pred2.NetQDA$clase$yhat)
+MC2.QDA <- table(Datos.Test$Clase, Pred2.QDA)
+
+MC3.NetQDA <- table(Datos.Test$Clase, Pred3.NetQDA$clase$yhat)
+MC3.QDA <- table(Datos.Test$Clase, Pred3.QDA)
+
+
+sum(diag(MC1.NetQDA))/sum(MC1.NetQDA)
+sum(diag(MC1.QDA))/sum(MC1.QDA)
+
+sum(diag(MC2.NetQDA))/sum(MC2.NetQDA)
+sum(diag(MC2.QDA))/sum(MC2.QDA)
+
+sum(diag(MC3.NetQDA))/sum(MC3.NetQDA)
+sum(diag(MC3.QDA))/sum(MC3.QDA)
+
+
+Resultados <- data.frame(
+  Modelo = factor(c("NetQDA", "NetQDA", "NetQDA", "QDA", "QDA", "QDA")),
+  Rho = c(rho.tune1$best.rho, rho.tune2$best.rho, rho.tune3$best.rho, NA, NA, NA),
+  N = c(50, 100, 1000, 50, 100, 1000),
+  Precision = c(round(sum(diag(MC1.NetQDA))/sum(MC1.NetQDA),2),
+                round(sum(diag(MC2.NetQDA))/sum(MC2.NetQDA),2),
+                round(sum(diag(MC3.NetQDA))/sum(MC3.NetQDA),2),
+                round(sum(diag(MC1.QDA))/sum(MC1.QDA),2),
+                round(sum(diag(MC2.QDA))/sum(MC2.QDA),2),
+                round(sum(diag(MC3.QDA))/sum(MC3.QDA),2))
+)
+
+ggplot(data = Resultados,
+       mapping = aes(x = N, y = Precision, color = Modelo)) +
+  geom_line()
 
 # Plot 1 ------------------------------------------------------------------
 
@@ -199,15 +313,15 @@ plot(RAND.3$network)
 
 # Plot 2 ------------------------------------------------------------------
 
-network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train,-Clase),
+network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train3,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
-network.estimate.Clase2 <- estimateNetwork(data = select(muestra2.Train,-Clase),
+network.estimate.Clase2 <- estimateNetwork(data = select(muestra2.Train3,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
-network.estimate.Clase3 <- estimateNetwork(data = select(muestra3.Train,-Clase),
+network.estimate.Clase3 <- estimateNetwork(data = select(muestra3.Train3,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
@@ -215,3 +329,5 @@ layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
 plot(network.estimate.Clase1)
 plot(network.estimate.Clase2)
 plot(network.estimate.Clase3)
+
+

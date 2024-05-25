@@ -100,29 +100,31 @@ QDA.2 <- function(Train, Test) {
 
 QDA.3 <- function(Train, Test) {
   
-  rho.tune <- tune_rho_NetQDA(formula = Clase~.,
-                              datos = Train,
-                              prior_prob = c(1/3,1/3,1/3),
-                              rhos = seq(0.1, 1, by = 0.001))
+  rho.tune <- tune.rho(formula = Clase~.,
+                       data = Train,
+                       rhos = seq(0.1, 1, by = 0.01),
+                       prior = c(1/3, 1/3, 1/3),
+                       nfolds = 10)
   
   NetQDA <- NetQDA(formula = Clase~., 
-                   datos = Train,
-                   rho = rho.tune$best_rho,
-                   prior_prob = c(1/3,1/3,1/3))
+                   data = Train,
+                   rho = rho.tune$best.rho),
+                   prior = c(1/3, 1/3, 1/3))
   
-  PredTrain <- Predict.NetQDA(object = NetQDA,
-                              NewData = dplyr::select(Train, -Clase))
+  PredTrain <- predict.NetQDA(object = NetQDA,
+                              newdata = dplyr::select(Train, -Clase))
   
-  PredTest <- Predict.NetQDA(object = NetQDA,
-                             NewData = dplyr::select(Test, -Clase))
+  PredTest <- predict.NetQDA(object = NetQDA,
+                             newdata = dplyr::select(Test, -Clase))
   
-  MC.Train <- table(Train$Clase, PredTrain$clase_predicha$.)
-  MC.Test <- table(Test$Clase, PredTest$clase_predicha$.)
+  MC.Train <- table(Train$Clase, PredTrain$clase$yhat)
+  MC.Test <- table(Test$Clase, PredTest$clase$yhat)
   
   return(list(MC.Train = MC.Train,
               MC.Test = MC.Test))
   
 }
+
 
 # Resultados --------------------------------------------------------------
 
@@ -155,7 +157,7 @@ M3 <- bind_rows(G.QDA.1, G.QDA.2, G.QDA.3) %>%
          Nombre = as.factor(Nombre))
 
 ggplot(data = M3,
-       mapping = aes(x = Nombre, y = TestGlobal)) +
+       mapping = aes(x = Nombre, y = TestClase3)) +
   geom_boxplot(fill = "steelblue3") + 
   theme_bw()
 
