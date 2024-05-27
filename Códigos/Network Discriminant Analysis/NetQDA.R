@@ -117,7 +117,9 @@ tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
   etiqueta <- as.character(formula[[2]])
   
   # Resultados de la validación cruzada
-  cv.results <- data.frame(rho = rhos, accuracy = rep(NA, length(rhos)))
+  cv.results <- data.frame(rho = rhos, 
+                           accuracy = rep(NA, length(rhos)),
+                           std.dev = rep(NA, length(rhos)))
   
   # Subconjuntos (folds) de entrenamiento y validación
   set.seed(123)
@@ -125,18 +127,18 @@ tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
   
   for (i in 1:length(rhos)) {
     
-    avg.accuracy <- 0
+    accuracy.val <- numeric(nfolds)
     
     # Realizar validación cruzada
-    for (fold in folds) {
+    for (fold_id in folds) {
       
       MC <- NULL
       
       # Conjunto de entrenamiento
-      train <- data[-fold, ]
+      train <- data[-fold_id, ]
       
       # Conjunto de prueba
-      val <- data[fold, ]
+      val <- data[fold_id, ]
       
       # Modelo
       model <- NetQDA(formula, prior = prior, train, rhos[i])
@@ -147,14 +149,19 @@ tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
       MC <- table(val[[etiqueta]], predictions$clase$yhat)
       
       # Precisión
-      accuracy <- sum(diag(MC))/sum(MC)
+      accuracy.val[fold_id] <- sum(diag(MC))/sum(MC)
       
-      # Precisión acumulada
-      avg.accuracy <- avg.accuracy + accuracy
     }
     
     # Precisión promedio
-    cv.results$accuracy[i] <- avg.accuracy/nfolds
+    avg.accuracy <- mean(accuracy.val)
+    
+    # Desviación estándar de la precisión
+    std.dev <- sd(accuracy.val)
+    
+    # Precisión promedio
+    cv.results$accuracy[i] <- avg.accuracy
+    cv.results$std.dev[i] <- std.dev
   }
   
   # Valor de rho que maximiza la precisión

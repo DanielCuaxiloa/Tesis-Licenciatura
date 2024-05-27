@@ -94,9 +94,9 @@ RAND <- function(alpha, p) {
 
 # Simulaciones ------------------------------------------------------------
 
-RAND.1 <- RAND(alpha = 1, p = 30)
-RAND.2 <- RAND(alpha = 1.1, p = 30)
-RAND.3 <- RAND(alpha = 1.2, p = 30)
+RAND.1 <- RAND(alpha = 1, p = 20)
+RAND.2 <- RAND(alpha = 1.1, p = 20)
+RAND.3 <- RAND(alpha = 1.2, p = 20)
 
 S1 <- RAND.1$S
 K1 <- solve(S1)
@@ -151,23 +151,42 @@ Datos.Train2 <- bind_rows(muestra1.Train2,
                           muestra2.Train2,
                           muestra3.Train2)
 
-## n = 1000
+## n = 500
 
-muestra1.Train3 <- mvrnorm(n = 1000, mu = m1, Sigma = S1) %>% 
+muestra1.Train3 <- mvrnorm(n = 500, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Train3 <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>% 
+muestra2.Train3 <- mvrnorm(n = 500, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Train3 <- mvrnorm(n = 1000, mu = m3, Sigma = S3) %>% 
+muestra3.Train3 <- mvrnorm(n = 500, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
 Datos.Train3 <- bind_rows(muestra1.Train3, 
                           muestra2.Train3,
-                          muestra3.Train3) 
+                          muestra3.Train3)
+
+
+## n = 1000
+
+muestra1.Train4 <- mvrnorm(n = 1000, mu = m1, Sigma = S1) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase1"))
+
+muestra2.Train4 <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase2"))
+
+muestra3.Train4 <- mvrnorm(n = 1000, mu = m3, Sigma = S3) %>% 
+  data.frame() %>% 
+  mutate(Clase = as.factor("Clase3"))
+
+Datos.Train4 <- bind_rows(muestra1.Train4, 
+                          muestra2.Train4,
+                          muestra3.Train4) 
 
 
 # Test --------------------------------------------------------------------
@@ -202,31 +221,75 @@ source("NetQDA.R")
 rho.tune1 <- tune.rho(formula = Clase~.,
                       data = Datos.Train1,
                       rhos = seq(0, 1, by = 0.01),
-                      nfolds = 5)
+                      nfolds = 10)
 
 rho.tune2 <- tune.rho(formula = Clase~.,
                       data = Datos.Train2,
                       rhos = seq(0, 1, by = 0.01),
-                      nfolds = 5)
+                      nfolds = 10)
 
 rho.tune3 <- tune.rho(formula = Clase~.,
                       data = Datos.Train3,
                       rhos = seq(0, 1, by = 0.01),
-                      nfolds = 5)
+                      nfolds = 10)
 
-plot(rho.tune1[["cv.results"]]$rho,
-     rho.tune1[["cv.results"]]$accuracy)
+rho.tune4 <- tune.rho(formula = Clase~.,
+                      data = Datos.Train4,
+                      rhos = seq(0, 1, by = 0.01),
+                      nfolds = 10)
 
-plot(rho.tune2[["cv.results"]]$rho,
-     rho.tune2[["cv.results"]]$accuracy)
+ggplot(data = rho.tune1$cv.results, 
+      mapping = aes(x = rho, y = accuracy)) +
+  geom_point(size = 1) +
+  geom_ribbon(aes(ymin = accuracy - std.dev, 
+                  ymax = accuracy + std.dev), 
+              alpha = 0.5,
+              fill = "grey") +  
+  geom_vline(xintercept = rho.tune1$best.rho, 
+             linetype = "dashed", 
+             color = "red") + 
+  theme_bw()
 
-plot(rho.tune3[["cv.results"]]$rho,
-     rho.tune3[["cv.results"]]$accuracy)
+ggplot(data = rho.tune2$cv.results, 
+       mapping = aes(x = rho, y = accuracy)) +
+  geom_point(size = 1) +
+  geom_ribbon(aes(ymin = accuracy - std.dev, 
+                  ymax = accuracy + std.dev), 
+              alpha = 0.5,
+              fill = "grey") +  
+  geom_vline(xintercept = rho.tune2$best.rho, 
+             linetype = "dashed", 
+             color = "red") + 
+  theme_bw()
+
+ggplot(data = rho.tune3$cv.results, 
+       mapping = aes(x = rho, y = accuracy)) +
+  geom_point(size = 1) +
+  geom_ribbon(aes(ymin = accuracy - std.dev, 
+                  ymax = accuracy + std.dev), 
+              alpha = 0.5,
+              fill = "grey") +  
+  geom_vline(xintercept = rho.tune3$best.rho, 
+             linetype = "dashed", 
+             color = "red") + 
+  theme_bw()
+
+ggplot(data = rho.tune4$cv.results, 
+       mapping = aes(x = rho, y = accuracy)) +
+  geom_point(size = 1) +
+  geom_ribbon(aes(ymin = accuracy - std.dev, 
+                  ymax = accuracy + std.dev), 
+              alpha = 0.5,
+              fill = "grey") +  
+  geom_vline(xintercept = rho.tune4$best.rho, 
+             linetype = "dashed", 
+             color = "red") + 
+  theme_bw()
 
 rho.tune1$best.rho
 rho.tune2$best.rho
 rho.tune3$best.rho
-
+rho.tune4$best.rho
 
 Modelo1.NetQDA <- NetQDA(formula = Clase~.,
                          data = Datos.Train1,
@@ -240,6 +303,10 @@ Modelo3.NetQDA <- NetQDA(formula = Clase~.,
                          data = Datos.Train3,
                          rho = rho.tune3$best.rho)
 
+Modelo4.NetQDA <- NetQDA(formula = Clase~.,
+                         data = Datos.Train4,
+                         rho = rho.tune4$best.rho)
+
 Pred1.NetQDA <- predict.NetQDA(object = Modelo1.NetQDA,
                                newdata = select(Datos.Test, -Clase))
 
@@ -247,6 +314,9 @@ Pred2.NetQDA <- predict.NetQDA(object = Modelo2.NetQDA,
                                newdata = select(Datos.Test, -Clase))
 
 Pred3.NetQDA <- predict.NetQDA(object = Modelo3.NetQDA,
+                               newdata = select(Datos.Test, -Clase))
+
+Pred4.NetQDA <- predict.NetQDA(object = Modelo4.NetQDA,
                                newdata = select(Datos.Test, -Clase))
 
 Modelo1.QDA <- qda(formula = Clase~.,
@@ -258,6 +328,9 @@ Modelo2.QDA <- qda(formula = Clase~.,
 Modelo3.QDA <- qda(formula = Clase~.,
                    data = Datos.Train3)
 
+Modelo4.QDA <- qda(formula = Clase~.,
+                   data = Datos.Train4)
+
 Pred1.QDA <- predict(object = Modelo1.QDA,
                     newdata = select(Datos.Test, -Clase))$class
 
@@ -265,6 +338,9 @@ Pred2.QDA <- predict(object = Modelo2.QDA,
                      newdata = select(Datos.Test, -Clase))$class
 
 Pred3.QDA <- predict(object = Modelo3.QDA,
+                     newdata = select(Datos.Test, -Clase))$class
+
+Pred4.QDA <- predict(object = Modelo4.QDA,
                      newdata = select(Datos.Test, -Clase))$class
 
 MC1.NetQDA <- table(Datos.Test$Clase, Pred1.NetQDA$clase$yhat)
@@ -276,6 +352,9 @@ MC2.QDA <- table(Datos.Test$Clase, Pred2.QDA)
 MC3.NetQDA <- table(Datos.Test$Clase, Pred3.NetQDA$clase$yhat)
 MC3.QDA <- table(Datos.Test$Clase, Pred3.QDA)
 
+MC4.NetQDA <- table(Datos.Test$Clase, Pred4.NetQDA$clase$yhat)
+MC4.QDA <- table(Datos.Test$Clase, Pred4.QDA)
+
 
 sum(diag(MC1.NetQDA))/sum(MC1.NetQDA)
 sum(diag(MC1.QDA))/sum(MC1.QDA)
@@ -286,42 +365,76 @@ sum(diag(MC2.QDA))/sum(MC2.QDA)
 sum(diag(MC3.NetQDA))/sum(MC3.NetQDA)
 sum(diag(MC3.QDA))/sum(MC3.QDA)
 
+sum(diag(MC4.NetQDA))/sum(MC4.NetQDA)
+sum(diag(MC4.QDA))/sum(MC4.QDA)
 
 Resultados <- data.frame(
-  Modelo = factor(c("NetQDA", "NetQDA", "NetQDA", "QDA", "QDA", "QDA")),
-  Rho = c(rho.tune1$best.rho, rho.tune2$best.rho, rho.tune3$best.rho, NA, NA, NA),
-  N = c(50, 100, 1000, 50, 100, 1000),
-  Precision = c(round(sum(diag(MC1.NetQDA))/sum(MC1.NetQDA),2),
-                round(sum(diag(MC2.NetQDA))/sum(MC2.NetQDA),2),
-                round(sum(diag(MC3.NetQDA))/sum(MC3.NetQDA),2),
-                round(sum(diag(MC1.QDA))/sum(MC1.QDA),2),
-                round(sum(diag(MC2.QDA))/sum(MC2.QDA),2),
-                round(sum(diag(MC3.QDA))/sum(MC3.QDA),2))
+  Modelo = factor(c("NetQDA", "NetQDA", "NetQDA", "NetQDA", 
+                    "QDA", "QDA", "QDA", "QDA")),
+  Rho = c(rho.tune1$best.rho, rho.tune2$best.rho, rho.tune3$best.rho, rho.tune4$best.rho, 
+          NA, NA, NA, NA),
+  N = c(50, 100, 500, 1000, 50, 100, 500, 1000),
+  Precision = c(round(sum(diag(MC1.NetQDA))/sum(MC1.NetQDA),4),
+                round(sum(diag(MC2.NetQDA))/sum(MC2.NetQDA),4),
+                round(sum(diag(MC3.NetQDA))/sum(MC3.NetQDA),4),
+                round(sum(diag(MC4.NetQDA))/sum(MC4.NetQDA),4),
+                round(sum(diag(MC1.QDA))/sum(MC1.QDA),4),
+                round(sum(diag(MC2.QDA))/sum(MC2.QDA),4),
+                round(sum(diag(MC3.QDA))/sum(MC3.QDA),4),
+                round(sum(diag(MC4.QDA))/sum(MC4.QDA),4))
 )
 
 ggplot(data = Resultados,
-       mapping = aes(x = N, y = Precision, color = Modelo)) +
-  geom_line()
+       mapping = aes(x = as.factor(N), 
+                     y = Precision, 
+                     color = Modelo,
+                     shape = Modelo)) +
+  geom_point() +
+  geom_line(aes(group = Modelo)) + 
+  theme_bw() + 
+  labs(x = "n", 
+       y = "Precisión", 
+       color = "Modelo", 
+       shape = "Modelo") 
 
 # Plot 1 ------------------------------------------------------------------
 
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
-plot(RAND.1$network)
-plot(RAND.2$network)
-plot(RAND.3$network)
+plot(x = RAND.1$network,
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
 
+plot(x = RAND.2$network,
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = RAND.3$network,
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
 
 # Plot 2 ------------------------------------------------------------------
 
-network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train3,-Clase),
+network.estimate.Clase1 <- estimateNetwork(data = select(muestra1.Train1,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
-network.estimate.Clase2 <- estimateNetwork(data = select(muestra2.Train3,-Clase),
+network.estimate.Clase2 <- estimateNetwork(data = select(muestra2.Train1,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
-network.estimate.Clase3 <- estimateNetwork(data = select(muestra3.Train3,-Clase),
+network.estimate.Clase3 <- estimateNetwork(data = select(muestra3.Train1,-Clase),
                                            default = "EBICglasso",
                                            tuning = 0)
 
