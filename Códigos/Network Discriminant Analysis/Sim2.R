@@ -1,7 +1,7 @@
 
-###############
-# Network QDA #
-###############
+###########################
+# Simulación 2 | UGGM_QDA #
+###########################
 
 library(igraph)
 library(qgraph)
@@ -73,7 +73,7 @@ Sample <- function(n, mu, Sigma, class.label) {
 
 # Funciones NetQDA --------------------------------------------------------
 
-source("NetQDA.R")
+source("UGGM_QDA.R")
 
 
 # Simulaciones ------------------------------------------------------------
@@ -82,6 +82,7 @@ Gen.Data <- function(P, N) {
   
   Data <- list(Train = list(), Test = list())
   Network <- list()
+  Theoric <- list()
   
   for (p in P) {
     
@@ -90,6 +91,14 @@ Gen.Data <- function(P, N) {
     RAND.3 <- RAND(alpha = 1.2, p = p)
     
     Network[[as.character(p)]] <- list(RAND.1$network, RAND.2$network, RAND.3$network)
+    
+    Theoric[[as.character(p)]] <- list(pi = list(Clase1 = 1/3, Clase2 = 1/3, Clase3 = 1/3),
+                                       mu = list(Clase1 = RAND.1$m, 
+                                                 Clase2 = RAND.2$m, 
+                                                 Clase3 = RAND.3$m),
+                                       sigma = list(Clase1 = RAND.1$S, 
+                                                    Clase2 = RAND.2$S, 
+                                                    Clase3 = RAND.3$S))
     
     set.seed(123)
     data.train.p <- lapply(N, function(n) {
@@ -103,13 +112,13 @@ Gen.Data <- function(P, N) {
     Data$Train[[as.character(p)]] <- data.train.p
     
     set.seed(321)
-    muestra1.test <- Sample(1000, RAND.1$m, RAND.1$S, "Clase1")
-    muestra2.test <- Sample(1000, RAND.2$m, RAND.2$S, "Clase2")
-    muestra3.test <- Sample(1000, RAND.3$m, RAND.3$S, "Clase3")
+    muestra1.test <- Sample(10000, RAND.1$m, RAND.1$S, "Clase1")
+    muestra2.test <- Sample(10000, RAND.2$m, RAND.2$S, "Clase2")
+    muestra3.test <- Sample(10000, RAND.3$m, RAND.3$S, "Clase3")
     Data$Test[[as.character(p)]] <- bind_rows(muestra1.test, muestra2.test, muestra3.test)
   }
   
-  return(list(Network = Network, Data = Data))
+  return(list(Network = Network, Data = Data, Theoric = Theoric))
   
 }
 
@@ -117,6 +126,113 @@ P <- c(20, 25, 30, 35)
 N <- c(50, 100, 500, 1000)
 
 gen.data <- Gen.Data(P = P, N = N)
+
+
+# Networks ----------------------------------------------------------------
+
+## p = 20
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(x = gen.data[["Network"]][["20"]][[1]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["20"]][[2]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["20"]][[3]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+## p = 25
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(x = gen.data[["Network"]][["25"]][[1]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["25"]][[2]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["25"]][[3]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+## p = 30
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(x = gen.data[["Network"]][["30"]][[1]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["30"]][[2]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["30"]][[3]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+## p = 35
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+plot(x = gen.data[["Network"]][["35"]][[1]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["35"]][[2]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
+
+plot(x = gen.data[["Network"]][["35"]][[3]],
+     layout = layout_with_kk,
+     vertex.size = 15,
+     vertex.color = "skyblue",
+     vertex.shape = "circle",
+     edge.color = "gray",
+     edge.width = 2)
 
 
 # Tuning ------------------------------------------------------------------
@@ -211,25 +327,27 @@ Aux <- function(model.func , predict.func, data.train, data.test, best.rho = NUL
   list(models = models, pred = pred, MC = mc, accuracies = accuracies)
 }
 
-Models <- list(NetQDA = list(Model = list(), Pred = list(), MC = list(), Accuracy = list()),
-               QDA = list(Model = list(), Pred = list(), MC = list(), Accuracy = list()))
+Models <- list(UGGM_QDA = list(Model = list(), Pred = list(), MC = list(), Accuracy = list()),
+               QDA = list(Model = list(), Pred = list(), MC = list(), Accuracy = list()),
+               Theoric = list(Model = list(), Pred = list(), MC = list(), Accuracy = list()))
 
 for (p in P) {
   
-  result <- Aux(model.func = NetQDA,
-                predict.func = function(model, newdata) predict.NetQDA(object = model, newdata = newdata),
+  result <- Aux(model.func = UGGM_QDA,
+                predict.func = function(model, newdata) predict.UGGM_QDA(object = model, newdata = newdata),
                 data.train = gen.data$Data$Train[[as.character(p)]],
                 data.test = gen.data$Data$Test[[as.character(p)]],
                 best.rho = best.rho)
   
-  Models$NetQDA$Model[[as.character(p)]] <- result$models
-  Models$NetQDA$Pred[[as.character(p)]] <- result$pred
-  Models$NetQDA$MC[[as.character(p)]] <- result$MC
-  Models$NetQDA$Accuracy[[as.character(p)]] <- result$accuracies
+  Models$UGGM_QDA$Model[[as.character(p)]] <- result$models
+  Models$UGGM_QDA$Pred[[as.character(p)]] <- result$pred
+  Models$UGGM_QDA$MC[[as.character(p)]] <- result$MC
+  Models$UGGM_QDA$Accuracy[[as.character(p)]] <- result$accuracies
   
 }
 
 for (p in P) {
+  
   result <- Aux(model.func = qda,
                 predict.func = function(model, newdata) predict(object = model, newdata = newdata)$class,
                 data.train = gen.data$Data$Train[[as.character(p)]],
@@ -239,16 +357,38 @@ for (p in P) {
   Models$QDA$Pred[[as.character(p)]] <- result$pred
   Models$QDA$MC[[as.character(p)]] <- result$MC
   Models$QDA$Accuracy[[as.character(p)]] <- result$accuracies
+  
+}
+
+for (p in P) {
+  
+  for (n in N) {
+   
+    Models$Theoric$Model[[as.character(p)]][[as.character(n)]] <- "theoric"
+    
+    Models$Theoric$Pred[[as.character(p)]][[as.character(n)]]  <- predict.theoricQDA(object = gen.data$Theoric[[as.character(p)]],
+                                                                                     newdata = select(gen.data$Data$Test[[as.character(p)]], -Clase))
+    
+    Models$Theoric$MC[[as.character(p)]][[as.character(n)]]  <- table(gen.data$Data$Test[[as.character(p)]]$Clase,
+                                                                      Models[["Theoric"]][["Pred"]][[as.character(p)]][[as.character(n)]][["clase"]]$yhat)
+    
+    Models$Theoric$Accuracy[[as.character(p)]][[as.character(n)]] <- sum(diag(Models$Theoric$MC[[as.character(p)]][[as.character(n)]]))/sum(Models$Theoric$MC[[as.character(p)]][[as.character(n)]])
+     
+  }
 }
 
 Resultados <- bind_rows(data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
                                    N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
-                                   Accuracy = unlist(Models$NetQDA$Accuracy),
-                                   Modelo = factor("NetQDA")),
+                                   Accuracy = unlist(Models$UGGM_QDA$Accuracy),
+                                   Modelo = factor("UGGM_QDA")),
                         data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
                                    N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
                                    Accuracy = unlist(Models$QDA$Accuracy),
-                                   Modelo = factor("QDA")))
+                                   Modelo = factor("QDA")),
+                        data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
+                                   N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
+                                   Accuracy = unlist(Models$Theoric$Accuracy),
+                                   Modelo = factor("Theoric")))
 
 rownames(Resultados) <- NULL
 

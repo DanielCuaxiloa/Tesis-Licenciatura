@@ -1,7 +1,7 @@
 
-###############
-# Network QDA #
-###############
+###########################
+# Simulación 1 | UGGM_QDA #
+###########################
 
 library(igraph)
 library(qgraph)
@@ -110,6 +110,10 @@ S3 <- RAND.3$S
 K3 <- solve(S3)
 m3 <- rep(x = 0, times = ncol(S3))
 
+Theoric <- list(mu = list(Clase1 = m1, Clase2 = m2, Clase3 = m3),
+                pi = list(Clase1 = 1/3, Clase2 = 1/3, Clase3 = 1/3),
+                sigma = list(Clase1 = S1, Clase2 = S2, Clase3 = S3))
+
 
 # Train -------------------------------------------------------------------
 
@@ -193,15 +197,15 @@ Datos.Train4 <- bind_rows(muestra1.Train4,
 
 set.seed(321)
 
-muestra1.Test <- mvrnorm(n = 1000, mu = m1, Sigma = S1) %>% 
+muestra1.Test <- mvrnorm(n = 10000, mu = m1, Sigma = S1) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase1"))
 
-muestra2.Test <- mvrnorm(n = 1000, mu = m2, Sigma = S2) %>% 
+muestra2.Test <- mvrnorm(n = 10000, mu = m2, Sigma = S2) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase2"))
 
-muestra3.Test <- mvrnorm(n = 1000, mu = m3, Sigma = S3) %>% 
+muestra3.Test <- mvrnorm(n = 10000, mu = m3, Sigma = S3) %>% 
   data.frame() %>% 
   mutate(Clase = as.factor("Clase3"))
 
@@ -213,7 +217,7 @@ Datos.Test <- bind_rows(muestra1.Test,
 
 # Funciones NetQDA --------------------------------------------------------
 
-source("NetQDA.R")
+source("UGGM_QDA.R")
 
 
 # Comparación MASS v.s NetQDA ----------------------------------------------
@@ -291,33 +295,39 @@ rho.tune2$best.rho
 rho.tune3$best.rho
 rho.tune4$best.rho
 
-Modelo1.NetQDA <- NetQDA(formula = Clase~.,
-                         data = Datos.Train1,
-                         rho = rho.tune1$best.rho)
 
-Modelo2.NetQDA <- NetQDA(formula = Clase~.,
-                         data = Datos.Train2,
-                         rho = rho.tune2$best.rho)
+# NetQDA ------------------------------------------------------------------
 
-Modelo3.NetQDA <- NetQDA(formula = Clase~.,
-                         data = Datos.Train3,
-                         rho = rho.tune3$best.rho)
+Modelo1.NetQDA <- UGGM_QDA(formula = Clase~.,
+                           data = Datos.Train1,
+                           rho = rho.tune1$best.rho)
 
-Modelo4.NetQDA <- NetQDA(formula = Clase~.,
-                         data = Datos.Train4,
-                         rho = rho.tune4$best.rho)
+Modelo2.NetQDA <- UGGM_QDA(formula = Clase~.,
+                           data = Datos.Train2,
+                           rho = rho.tune2$best.rho)
 
-Pred1.NetQDA <- predict.NetQDA(object = Modelo1.NetQDA,
-                               newdata = select(Datos.Test, -Clase))
+Modelo3.NetQDA <- UGGM_QDA(formula = Clase~.,
+                           data = Datos.Train3,
+                           rho = rho.tune3$best.rho)
 
-Pred2.NetQDA <- predict.NetQDA(object = Modelo2.NetQDA,
-                               newdata = select(Datos.Test, -Clase))
+Modelo4.NetQDA <- UGGM_QDA(formula = Clase~.,
+                           data = Datos.Train4,
+                           rho = rho.tune4$best.rho)
 
-Pred3.NetQDA <- predict.NetQDA(object = Modelo3.NetQDA,
-                               newdata = select(Datos.Test, -Clase))
+Pred1.NetQDA <- predict.UGGM_QDA(object = Modelo1.NetQDA,
+                                 newdata = select(Datos.Test, -Clase))
 
-Pred4.NetQDA <- predict.NetQDA(object = Modelo4.NetQDA,
-                               newdata = select(Datos.Test, -Clase))
+Pred2.NetQDA <- predict.UGGM_QDA(object = Modelo2.NetQDA,
+                                 newdata = select(Datos.Test, -Clase))
+
+Pred3.NetQDA <- predict.UGGM_QDA(object = Modelo3.NetQDA,
+                                 newdata = select(Datos.Test, -Clase))
+
+Pred4.NetQDA <- predict.UGGM_QDA(object = Modelo4.NetQDA,
+                                 newdata = select(Datos.Test, -Clase))
+
+
+# QDA ---------------------------------------------------------------------
 
 Modelo1.QDA <- qda(formula = Clase~.,
                    data = Datos.Train1)
@@ -342,6 +352,18 @@ Pred3.QDA <- predict(object = Modelo3.QDA,
 
 Pred4.QDA <- predict(object = Modelo4.QDA,
                      newdata = select(Datos.Test, -Clase))$class
+
+
+# Theoric -----------------------------------------------------------------
+
+Pred.TheoricQDA <- predict.theoricQDA(object = Theoric,
+                                       newdata = select(Datos.Test, -Clase))
+
+MC.Theoric <- table(Datos.Test$Clase, Pred.TheoricQDA$clase$yhat)
+sum(diag(MC.Theoric))/sum(MC.Theoric)
+
+
+# MC ----------------------------------------------------------------------
 
 MC1.NetQDA <- table(Datos.Test$Clase, Pred1.NetQDA$clase$yhat)
 MC1.QDA <- table(Datos.Test$Clase, Pred1.QDA)
@@ -374,15 +396,14 @@ Resultados <- data.frame(
   Rho = c(rho.tune1$best.rho, rho.tune2$best.rho, rho.tune3$best.rho, rho.tune4$best.rho, 
           NA, NA, NA, NA),
   N = c(50, 100, 500, 1000, 50, 100, 500, 1000),
-  Precision = c(round(sum(diag(MC1.NetQDA))/sum(MC1.NetQDA),4),
-                round(sum(diag(MC2.NetQDA))/sum(MC2.NetQDA),4),
-                round(sum(diag(MC3.NetQDA))/sum(MC3.NetQDA),4),
-                round(sum(diag(MC4.NetQDA))/sum(MC4.NetQDA),4),
-                round(sum(diag(MC1.QDA))/sum(MC1.QDA),4),
-                round(sum(diag(MC2.QDA))/sum(MC2.QDA),4),
-                round(sum(diag(MC3.QDA))/sum(MC3.QDA),4),
-                round(sum(diag(MC4.QDA))/sum(MC4.QDA),4))
-)
+  Precision = c(sum(diag(MC1.NetQDA))/sum(MC1.NetQDA),
+                sum(diag(MC2.NetQDA))/sum(MC2.NetQDA),
+                sum(diag(MC3.NetQDA))/sum(MC3.NetQDA),
+                sum(diag(MC4.NetQDA))/sum(MC4.NetQDA),
+                sum(diag(MC1.QDA))/sum(MC1.QDA),
+                sum(diag(MC2.QDA))/sum(MC2.QDA),
+                sum(diag(MC3.QDA))/sum(MC3.QDA),
+                sum(diag(MC4.QDA))/sum(MC4.QDA)))
 
 ggplot(data = Resultados,
        mapping = aes(x = as.factor(N), 
@@ -390,12 +411,16 @@ ggplot(data = Resultados,
                      color = Modelo,
                      shape = Modelo)) +
   geom_point() +
-  geom_line(aes(group = Modelo)) + 
+  geom_line(aes(group = Modelo)) +
+  geom_hline(yintercept = sum(diag(MC.Theoric))/sum(MC.Theoric), 
+             linetype = "dashed", 
+             color = "red4") +
   theme_bw() + 
   labs(x = "n", 
        y = "Precisión", 
        color = "Modelo", 
        shape = "Modelo") 
+
 
 # Plot 1 ------------------------------------------------------------------
 
