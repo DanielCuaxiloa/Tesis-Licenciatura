@@ -4,7 +4,13 @@ library(shinyjs)
 library(shinydashboard)
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Dashboard | Tesis", disable = FALSE),
+  dashboardHeader(
+    title = tags$div(
+      tags$img(src = "logoFC85.png", height = "40px", style = "margin-right: 10px;"),
+      "Dashboard | Tesis"
+    ),
+    disable = FALSE
+  ),
   dashboardSidebar(
     sidebarMenu(
       id = "tabs",
@@ -72,3 +78,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)
+
