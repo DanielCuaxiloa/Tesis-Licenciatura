@@ -3,6 +3,8 @@ library(shiny)
 library(shinyjs)
 library(shinydashboard)
 
+
+
 ui <- dashboardPage(
   dashboardHeader(
     title = tags$div(
@@ -35,16 +37,16 @@ ui <- dashboardPage(
                          div(
                            class = "main-content",
                            h3("Aprendizaje Supervisado"),
-                           p("Aquí se describen los aspectos teóricos del aprendizaje supervisado...")
-                           # Añade más contenido teórico sobre aprendizaje supervisado aquí
+                           p("...")
+                           #...
                          )
                 ),
                 tabPanel("Algoritmos de Clasificación",
                          div(
                            class = "main-content",
                            h3("Algoritmos de Clasificación"),
-                           p("Aquí se describen los aspectos teóricos de los algoritmos de clasificación...")
-                           # Añade más contenido teórico sobre algoritmos de clasificación aquí
+                           p("...")
+                           #...
                          )
                 )
               )
@@ -55,16 +57,16 @@ ui <- dashboardPage(
                          div(
                            class = "main-content",
                            h3("Contexto"),
-                           p("Aquí se describe el contexto del caso práctico...")
-                           # Añade más contenido sobre el contexto del caso práctico aquí
+                           p("...")
+                           #...
                          )
                 ),
                 tabPanel("Resultados",
                          div(
                            class = "main-content",
                            h3("Resultados"),
-                           p("Aquí se muestran los resultados del caso práctico...")
-                           # Añade más contenido sobre los resultados del caso práctico aquí
+                           p("...")
+                           #...
                          )
                 )
               )
