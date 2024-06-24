@@ -69,6 +69,49 @@ UGGM_QDA <- function(formula, data, rho, prior = NULL) {
   return(list(mu = mu, pi = pi, sigma = Sigma, omega = Omega))
 }
 
+predict.UGGM_QDA <- function(object, newdata){
+  
+  NewData <- as.matrix(newdata)
+  mu <- object$mu
+  pi <- object$pi
+  Sigma <- object$sigma
+  Omega <- object$omega
+  
+  # Número de clases y observaciones
+  num.clases <- length(mu)
+  num.obs <- nrow(NewData)
+  
+  # Probabilidades de pertenecer a cada clase para cada observación
+  probs <- matrix(NA, nrow = num.obs, ncol = num.clases)
+  
+  for (j in 1:num.clases) {
+    
+    # Función discriminante para la clase j
+    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - rep(mu[[j]], each = num.obs)) %*% Omega[[j]] * (NewData - rep(mu[[j]], each = num.obs)))
+    
+    # Matriz de probabilidades
+    probs[, j] <- delta
+    
+  }
+  
+  # Probabilidades normalizadas
+  probs <- exp(probs)
+  probs <- data.frame(probs = probs/rowSums(probs))
+  
+  # Nombre de las clases
+  nombres.clases <- names(pi)
+  
+  # Clase predicha para cada observación con los nombres de las clases
+  clase.predicha <- data.frame(yhat = apply(probs, 1, function(x) nombres.clases[which.max(x)]))
+  
+  colnames(probs) <- nombres.clases
+  
+  # Probabilidad estimada y clase predicha
+  return(list(prob = probs, 
+              clase = clase.predicha))
+  
+}
+
 tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
   
   etiqueta <- as.character(formula[[2]])
@@ -126,49 +169,6 @@ tune.rho <- function(formula, data, rhos, prior = NULL, nfolds = 5) {
   
   # Resultados
   return(list(cv.results = cv.results, best.rho = best.rho))
-}
-
-predict.UGGM_QDA <- function(object, newdata){
-  
-  NewData <- as.matrix(newdata)
-  mu <- object$mu
-  pi <- object$pi
-  Sigma <- object$sigma
-  Omega <- object$omega
-  
-  # Número de clases y observaciones
-  num.clases <- length(mu)
-  num.obs <- nrow(NewData)
-  
-  # Probabilidades de pertenecer a cada clase para cada observación
-  probs <- matrix(NA, nrow = num.obs, ncol = num.clases)
-  
-  for (j in 1:num.clases) {
-    
-    # Función discriminante para la clase j
-    delta <- log(pi[[j]]) - 0.5 * log(det(solve(Omega[[j]]))) - 0.5 * rowSums((NewData - rep(mu[[j]], each = num.obs)) %*% Omega[[j]] * (NewData - rep(mu[[j]], each = num.obs)))
-    
-    # Matriz de probabilidades
-    probs[, j] <- delta
-    
-  }
-  
-  # Probabilidades normalizadas
-  probs <- exp(probs)
-  probs <- data.frame(probs = probs/rowSums(probs))
-  
-  # Nombre de las clases
-  nombres.clases <- names(pi)
-  
-  # Clase predicha para cada observación con los nombres de las clases
-  clase.predicha <- data.frame(yhat = apply(probs, 1, function(x) nombres.clases[which.max(x)]))
-  
-  colnames(probs) <- nombres.clases
-  
-  # Probabilidad estimada y clase predicha
-  return(list(prob = probs, 
-              clase = clase.predicha))
-  
 }
 
 predict.theoricQDA <- function(object, newdata){

@@ -1,0 +1,10 @@
+name: dashboard
+title:
+username: daniel-dc
+account: daniel-dc
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12225123
+bundleId: 8779890
+url: https://daniel-dc.shinyapps.io/dashboard/
+version: 1

@@ -277,7 +277,8 @@ ggplot(data = cv.results,
               alpha = 0.5,
               fill = "grey") +  
   geom_vline(data = best.rho, 
-             aes(xintercept = best.rho), 
+             aes(xintercept = best.rho),
+             linewidth = 0.3,
              linetype = "dashed", 
              color = "red") + 
   facet_grid(N~P) +
