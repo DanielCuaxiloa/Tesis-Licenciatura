@@ -2,8 +2,20 @@
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
+library(ggplot2)
+library(dplyr)
 
+# Cargar los datos de los modelos
+Modelo1 <- read.csv(file = "Modelo1.csv", stringsAsFactors = TRUE)
+Modelo2 <- read.csv(file = "Modelo2.csv", stringsAsFactors = TRUE)
+Modelo3 <- read.csv(file = "Modelo3.csv", stringsAsFactors = TRUE)
+Modelo4 <- read.csv(file = "Modelo4.csv", stringsAsFactors = TRUE)
+Modelo5 <- read.csv(file = "Modelo5.csv", stringsAsFactors = TRUE)
+Modelo6 <- read.csv(file = "Modelo6.csv", stringsAsFactors = TRUE)
 
+# Combinar los datos
+Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5, Modelo6) %>% 
+  select(-ID1)
 
 ui <- dashboardPage(
   dashboardHeader(
@@ -22,6 +34,19 @@ ui <- dashboardPage(
     )
   ),
   dashboardBody(
+    tags$head(
+      tags$style(HTML("
+        .main-content {
+          background-color: #f0f0f0;
+        }
+        .box {
+          background-color: #f0f0f0;
+          border: 1px solid #d2d6de;
+          border-radius: 3px;
+          padding: 10px;
+        }
+      "))
+    ),
     useShinyjs(),
     tabItems(
       tabItem(tabName = "menu",
@@ -63,10 +88,20 @@ ui <- dashboardPage(
                 ),
                 tabPanel("Resultados",
                          div(
-                           class = "main-content",
-                           h3("Resultados"),
-                           p("...")
-                           #...
+                           class = "main-content box",
+                           h3("Resultados Modelo"),
+                           fluidRow(
+                             column(6,
+                                    selectInput("ycol", "Métrica", choices = c("TestGlobal", "TestClase1", "TestClase2", "TestClase3"), selected = "TestGlobal")
+                             ),
+                             column(6,
+                                    selectInput("modelos", "Modelo", 
+                                                choices = unique(Datos$Modelo), 
+                                                multiple = TRUE,
+                                                selectize = TRUE)  # Utilizar selectize para mostrar como lista desplegable
+                             )
+                           ),
+                           plotOutput("modelPlot")
                          )
                 )
               )
@@ -77,7 +112,28 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
   
+  # Visualización del modelo
+  output$modelPlot <- renderPlot({
+    filteredData <- Datos %>% filter(Modelo %in% input$modelos)
+    p <- ggplot(filteredData, mapping = aes_string(x = "Nombre", y = input$ycol)) +
+      facet_grid(cols = vars(Modelo), scales = "free_x") +
+      geom_boxplot(fill = "steelblue3") + 
+      theme_bw() + 
+      theme(
+        panel.background = element_rect(fill = "#f0f0f0", color = NA),
+        plot.background = element_rect(fill = "#f0f0f0", color = NA),
+        panel.grid.major = element_line(color = "white"),
+        panel.grid.minor = element_line(color = "white"),
+        strip.background = element_rect(fill = "#d2d6de"),
+        strip.text = element_text(color = "black")
+      ) +
+      labs(title = paste("Estimación de poder predictivo basado en la métrica", input$ycol, "por Modelo"))
+    
+    p
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
+
 
