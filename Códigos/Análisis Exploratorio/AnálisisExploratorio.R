@@ -11,9 +11,9 @@ library(tidyverse)
 library(ggforce)
 library(ggridges)
 library(corrplot)
+library(ggplot2)
 
 library(bootnet)
-
 
 # Datos -------------------------------------------------------------------
 
@@ -43,6 +43,35 @@ Datos <- Datos %>%
                                   TCGA_GTEX_main_category == "TCGA Glioblastoma Multiforme" ~ "TCGA_GM"))) %>% 
   select(-TCGA_GTEX_main_category)
 
+
+# Distancias --------------------------------------------------------------
+
+D <- Datos %>% 
+  pivot_longer(cols = -Clase,
+               names_to = "GeneExpression",
+               values_to = "Aux") %>% 
+  group_by(Clase, GeneExpression) %>% 
+  summarise(Media = mean(Aux)) %>% 
+  ungroup() %>%
+  pivot_wider(names_from = Clase, values_from = Media) %>%
+  mutate(across(starts_with("TCGA_"), ~ abs(. - GTEX_Brain))) %>% 
+  select(GeneExpression, starts_with("TCGA_")) %>%
+  pivot_longer(cols = starts_with("TCGA_"), names_to = "Clase", values_to = "Diferencia")
+
+D$Clase <- factor(D$Clase, levels=c("GTEX_Brain", "TCGA_LGG", "TCGA_GM"))
+
+  ggplot(data = D,
+        mapping = aes(x = Clase, y = reorder(x = GeneExpression,
+                                    X = Diferencia,
+                                    FUN = median), fill = Diferencia)) +
+  geom_tile() +
+  geom_text(aes(label = round(Diferencia, 1)), color = "steelblue1") +
+  scale_fill_viridis_c(option = "magma", direction = -1) +
+  theme_bw() +
+  theme(axis.text.y = element_text(angle = 0)) +
+  labs(x = "Grupo",
+       y = "Gene Expression",
+       fill = "")
 
 # Gráfica BoxPlot por grupos ----------------------------------------------
 

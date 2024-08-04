@@ -8,6 +8,7 @@ library(qgraph)
 library(bootnet)
 library(MASS)
 library(dplyr)
+library(corpcor)
 
 
 # RAND --------------------------------------------------------------------
@@ -138,7 +139,8 @@ plot(x = gen.data[["Network"]][["20"]][[1]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(a)")
 
 plot(x = gen.data[["Network"]][["20"]][[2]],
      layout = layout_with_kk,
@@ -146,7 +148,8 @@ plot(x = gen.data[["Network"]][["20"]][[2]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(b)")
 
 plot(x = gen.data[["Network"]][["20"]][[3]],
      layout = layout_with_kk,
@@ -154,7 +157,8 @@ plot(x = gen.data[["Network"]][["20"]][[3]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(c)")
 
 ## p = 25
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
@@ -164,7 +168,8 @@ plot(x = gen.data[["Network"]][["25"]][[1]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(a)")
 
 plot(x = gen.data[["Network"]][["25"]][[2]],
      layout = layout_with_kk,
@@ -172,7 +177,8 @@ plot(x = gen.data[["Network"]][["25"]][[2]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(b)")
 
 plot(x = gen.data[["Network"]][["25"]][[3]],
      layout = layout_with_kk,
@@ -180,7 +186,8 @@ plot(x = gen.data[["Network"]][["25"]][[3]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(c)")
 
 ## p = 30
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
@@ -190,7 +197,8 @@ plot(x = gen.data[["Network"]][["30"]][[1]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(a)")
 
 plot(x = gen.data[["Network"]][["30"]][[2]],
      layout = layout_with_kk,
@@ -198,7 +206,8 @@ plot(x = gen.data[["Network"]][["30"]][[2]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(b)")
 
 plot(x = gen.data[["Network"]][["30"]][[3]],
      layout = layout_with_kk,
@@ -206,7 +215,8 @@ plot(x = gen.data[["Network"]][["30"]][[3]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(c)")
 
 ## p = 35
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
@@ -216,7 +226,8 @@ plot(x = gen.data[["Network"]][["35"]][[1]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(a)")
 
 plot(x = gen.data[["Network"]][["35"]][[2]],
      layout = layout_with_kk,
@@ -224,7 +235,8 @@ plot(x = gen.data[["Network"]][["35"]][[2]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(b)")
 
 plot(x = gen.data[["Network"]][["35"]][[3]],
      layout = layout_with_kk,
@@ -232,7 +244,8 @@ plot(x = gen.data[["Network"]][["35"]][[3]],
      vertex.color = "skyblue",
      vertex.shape = "circle",
      edge.color = "gray",
-     edge.width = 2)
+     edge.width = 2,
+     main = "(c)")
 
 
 # Tuning ------------------------------------------------------------------
@@ -283,7 +296,7 @@ ggplot(data = cv.results,
              color = "red") + 
   facet_grid(N~P) +
   theme_bw() +
-  labs(x = "Rho", y = "Accuracy")
+  labs(x = "Rho", y = "TCCG")
 
 
 # NetQDA v.s QDA ----------------------------------------------------------
@@ -405,9 +418,30 @@ ggplot(data = Resultados,
   geom_line(aes(group = Modelo)) + 
   facet_grid(~P) + 
   theme_bw() + 
-  labs(x = "n", 
-       y = "Accuracy", 
+  labs(x = "Simulaciones por grupo", 
+       y = "TCCG", 
        color = "Modelo", 
        shape = "Modelo")
+
+##
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
+
+concentration_matrix <- Models[["UGGM_QDA"]][["Model"]][["35"]][["1000"]][["omega"]][["Clase3"]]
+
+S <- matrix(0, nrow = nrow(concentration_matrix), ncol = ncol(concentration_matrix))
+
+for (i in 1:nrow(S)) {
+  for (j in 1:ncol(S)) {
+    S[i,j] <- -concentration_matrix[i,j]/sqrt(concentration_matrix[i,i]*concentration_matrix[j,j])
+    S[i,j] <- round(S[i,j],3)
+  }
+}
+
+S[lower.tri(S)] <- 0
+
+qgraph(S, directed = FALSE, layout = "spring", title = "(c)")
+
+##
+
 
 
