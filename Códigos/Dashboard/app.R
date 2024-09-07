@@ -11,11 +11,18 @@ Modelo2 <- read.csv(file = "Modelo2.csv", stringsAsFactors = TRUE)
 Modelo3 <- read.csv(file = "Modelo3.csv", stringsAsFactors = TRUE)
 Modelo4 <- read.csv(file = "Modelo4.csv", stringsAsFactors = TRUE)
 Modelo5 <- read.csv(file = "Modelo5.csv", stringsAsFactors = TRUE)
-Modelo6 <- read.csv(file = "Modelo6.csv", stringsAsFactors = TRUE)
 
 # Combinar los datos
-Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5, Modelo6) %>% 
-  select(-ID1)
+Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5) %>% 
+  select(-ID1) %>% 
+  select(Modelo, Nombre, TestClase1, TestClase2, TestClase3, TestGlobal) %>% 
+  rename(
+    'TCC General' = TestGlobal,
+    'TCC - GTEX Brain' = TestClase1,
+    'TCC - TCGA LGG' = TestClase2,
+    'TCC - TCGA GM' = TestClase3,
+    Model = Nombre
+  )
 
 ui <- dashboardPage(
   dashboardHeader(
@@ -92,13 +99,17 @@ ui <- dashboardPage(
                            h3("Resultados Modelo"),
                            fluidRow(
                              column(6,
-                                    selectInput("ycol", "Métrica", choices = c("TestGlobal", "TestClase1", "TestClase2", "TestClase3"), selected = "TestGlobal")
+                                    selectInput("ycol", "Métrica", choices = c("TCC General", 
+                                                                               "TCC - GTEX Brain", 
+                                                                               "TCC - TCGA LGG", 
+                                                                               "TCC - TCGA GM"), 
+                                                selected = "TCC General")
                              ),
                              column(6,
                                     selectInput("modelos", "Modelo", 
                                                 choices = unique(Datos$Modelo), 
                                                 multiple = TRUE,
-                                                selectize = TRUE)  # Utilizar selectize para mostrar como lista desplegable
+                                                selectize = TRUE) 
                              )
                            ),
                            plotOutput("modelPlot")
@@ -115,7 +126,7 @@ server <- function(input, output, session) {
   # Visualización del modelo
   output$modelPlot <- renderPlot({
     filteredData <- Datos %>% filter(Modelo %in% input$modelos)
-    p <- ggplot(filteredData, mapping = aes_string(x = "Nombre", y = input$ycol)) +
+    p <- ggplot(filteredData, mapping = aes(x = Model, y = !!sym(input$ycol))) +
       facet_grid(cols = vars(Modelo), scales = "free_x") +
       geom_boxplot(fill = "steelblue3") + 
       theme_bw() + 

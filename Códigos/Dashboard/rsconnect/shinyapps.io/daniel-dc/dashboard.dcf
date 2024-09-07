@@ -5,6 +5,6 @@ account: daniel-dc
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12225123
-bundleId: 8798470
+bundleId: 8947186
 url: https://daniel-dc.shinyapps.io/dashboard/
 version: 1

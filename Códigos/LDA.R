@@ -133,23 +133,3 @@ write.csv(x = M2,
           file = "Modelo2.csv",
           row.names = FALSE)
 
-
-# Matriz de confusión promediada ------------------------------------------
-
-MC.M2.LDA.1 <- M2.LDA.1[["MatricesConfusion"]] %>% 
-  transpose()
-
-MC.M2.LDA.2 <- M2.LDA.2[["MatricesConfusion"]] %>% 
-  transpose()
-
-MC.M2.LDA.1.PROM <- Reduce("+", MC.M2.LDA.1$MC.Test) / length(MC.M2.LDA.1$MC.Test)
-MC.M2.LDA.1.PROM <- round(t(apply(MC.M2.LDA.1.PROM, 1, function(x) x / sum(x) * 100)),2)
-
-MC.M2.LDA.2.PROM <- Reduce("+", MC.M2.LDA.2$MC.Test) / length(MC.M2.LDA.2$MC.Test)
-MC.M2.LDA.2.PROM <- round(t(apply(MC.M2.LDA.2.PROM, 1, function(x) x / sum(x) * 100)),2)
-
-
-
-
-
-

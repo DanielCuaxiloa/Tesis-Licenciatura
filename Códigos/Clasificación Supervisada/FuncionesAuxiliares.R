@@ -58,20 +58,23 @@ ErroresClasificacion <- function(MC.Train, MC.Test){
 }
 
 Evaluacion <- function(Metodo, workers){
-
+  
   plan(strategy = multisession, 
        workers = workers)
   
   set.seed(1234)
   
-  Individual <- map(.x = Folds$splits,
+  # Guardar matrices de confusión para Train y Test
+  Resultados <- map(.x = Folds$splits,
                     .f = ~ConjuntoEvaluacion(.x)) %>% 
     transpose() %>% 
     future_pmap(.f = get(Metodo),
                 .options = furrr_options(seed = TRUE),
                 .progress = TRUE) %>% 
-    transpose() %>% 
-    pmap(.f = ~ErroresClasificacion(.x,.y)) %>% 
+    transpose()
+  
+  Individual <- Resultados %>% 
+    pmap(.f = ~ErroresClasificacion(.x, .y)) %>% 
     ldply(data.frame) %>% 
     mutate_if(is.numeric, ~.*100) %>% 
     mutate_if(is.numeric, round, 3) %>% 
@@ -90,8 +93,13 @@ Evaluacion <- function(Metodo, workers){
               TestClase3 = mean(TestClase3),
               TestGlobal = mean(TestGlobal))
   
-  return(list(Individual = Individual,
-              Global = Global))
+  # Agregar matrices de confusión al resultado
+  MatricesConfusion <- Resultados %>% 
+    pmap(function(MC.Train, MC.Test) {
+      list(MC.Train = MC.Train, MC.Test = MC.Test)
+    })
   
+  return(list(Individual = Individual,
+              Global = Global,
+              MatricesConfusion = MatricesConfusion))
 }
-

@@ -258,7 +258,7 @@ for (p in P) {
                                         function(Datos.Train) {
     tune.rho(formula = Clase~.,
              data = Datos.Train,
-             rhos = seq(0, 1, by = 0.01),
+             rhos = seq(0, 0.1, by = 0.001),
              nfolds = 10)
   })
 }
@@ -296,7 +296,7 @@ ggplot(data = cv.results,
              color = "red") + 
   facet_grid(N~P) +
   theme_bw() +
-  labs(x = "Rho", y = "TCCG")
+  labs(x = "Lambda", y = "TCCG", title = "Tuneo de lambda")
 
 
 # NetQDA v.s QDA ----------------------------------------------------------
@@ -418,10 +418,11 @@ ggplot(data = Resultados,
   geom_line(aes(group = Modelo)) + 
   facet_grid(~P) + 
   theme_bw() + 
-  labs(x = "Simulaciones por grupo", 
+  labs(x = "Tamaño de muestra por clase", 
        y = "TCCG", 
        color = "Modelo", 
-       shape = "Modelo")
+       shape = "Modelo",
+       title = "Compación de modelos UGGM-QDA v.s QDA")
 
 ##
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))

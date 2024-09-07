@@ -29,6 +29,9 @@ load("../Folds.RData")
 
 # Esquemas de clasificación -----------------------------------------------
 
+set.seed(123)
+set_random_seed(123)
+
 NN.1 <- function(Train, Test) {
   
   features_Train <- Train %>% 

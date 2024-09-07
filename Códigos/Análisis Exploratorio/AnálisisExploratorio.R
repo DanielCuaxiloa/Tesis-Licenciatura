@@ -43,6 +43,7 @@ Datos <- Datos %>%
                                   TCGA_GTEX_main_category == "TCGA Glioblastoma Multiforme" ~ "TCGA_GM"))) %>% 
   select(-TCGA_GTEX_main_category)
 
+write.csv(Datos, file = "Datos.csv", row.names = FALSE)
 
 # Distancias --------------------------------------------------------------
 

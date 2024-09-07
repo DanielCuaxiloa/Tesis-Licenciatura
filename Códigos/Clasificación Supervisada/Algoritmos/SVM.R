@@ -94,12 +94,12 @@ M4.SVM.2 <- Evaluacion(Metodo = "SVM.2",
 # Grafica -----------------------------------------------------------------
 
 G.SVM.1 <- M4.SVM.1[["Global"]] %>%
-  mutate(Modelo = "M4",
-         Nombre = "SVM.1")
+  mutate(Modelo = "Support Vector Machine",
+         Nombre = "SVM 1")
 
 G.SVM.2 <- M4.SVM.2[["Global"]] %>% 
-  mutate(Modelo = "M4",
-         Nombre = "SVM.2")
+  mutate(Modelo = "Support Vector Machine",
+         Nombre = "SVM 2")
 
 M4 <- bind_rows(G.SVM.1, G.SVM.2) %>% 
   mutate(Modelo = as.factor(Modelo),

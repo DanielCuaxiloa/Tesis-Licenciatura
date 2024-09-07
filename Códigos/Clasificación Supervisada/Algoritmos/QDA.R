@@ -25,7 +25,7 @@ library(readr)
 
 source("../FuncionesAuxiliares.R")
 
-source("../../Network Discriminant Analysis/NetQDA.R")
+source("../../UGGM/UGGM_QDA.R")
 
 
 # Conjuntos Train y Test --------------------------------------------------
@@ -56,66 +56,22 @@ QDA.1 <- function(Train, Test) {
 
 QDA.2 <- function(Train, Test) {
   
-  X_Train <- Train %>% 
-    dplyr::select(-Clase) %>% 
-    as.matrix()
-  
-  X_Test <- Test %>% 
-    dplyr::select(-Clase) %>% 
-    as.matrix()
-  
-  Y_Train <- Train %>% 
-    mutate(Clase = case_when(
-      Clase == "GTEX_B" ~ 1,
-      Clase == "TCGA_BLGG" ~ 2,
-      Clase == "TCGA_GM" ~ 3)) %>% 
-    dplyr::select(Clase) %>% 
-    as.matrix()
-  
-  Y_Test <- Test %>% 
-    mutate(Clase = case_when(
-      Clase == "GTEX_B" ~ 1,
-      Clase == "TCGA_BLGG" ~ 2,
-      Clase == "TCGA_GM" ~ 3)) %>% 
-    dplyr::select(Clase) %>% 
-    as.matrix()
-  
-  NetQDA.Train <- NetDA(X = X_Train,
-                        Y = Y_Train,
-                        method = 2,
-                        X_test = X_Train)
-  
-  NetQDA.Test <- NetDA(X = X_Train,
-                       Y = Y_Train,
-                       method = 2,
-                       X_test = X_Test)
-  
-  MC.Train <- table(Y_Train, NetQDA.Train$yhat)
-  MC.Test <- table(Y_Test, NetQDA.Test$yhat)
-  
-  return(list(MC.Train = MC.Train,
-              MC.Test = MC.Test))
-  
-}
-
-QDA.3 <- function(Train, Test) {
-  
   rho.tune <- tune.rho(formula = Clase~.,
                        data = Train,
                        rhos = seq(0.1, 1, by = 0.01),
                        prior = c(1/3, 1/3, 1/3),
                        nfolds = 10)
   
-  NetQDA <- NetQDA(formula = Clase~., 
-                   data = Train,
-                   rho = rho.tune$best.rho),
-                   prior = c(1/3, 1/3, 1/3))
+  NetQDA <- UGGM_QDA(formula = Clase~., 
+                     data = Train,
+                     rho = rho.tune$best.rho,
+                     prior = c(1/3, 1/3, 1/3))
   
-  PredTrain <- predict.NetQDA(object = NetQDA,
-                              newdata = dplyr::select(Train, -Clase))
+  PredTrain <- predict.UGGM_QDA(object = NetQDA,
+                                newdata = dplyr::select(Train, -Clase))
   
-  PredTest <- predict.NetQDA(object = NetQDA,
-                             newdata = dplyr::select(Test, -Clase))
+  PredTest <- predict.UGGM_QDA(object = NetQDA,
+                               newdata = dplyr::select(Test, -Clase))
   
   MC.Train <- table(Train$Clase, PredTrain$clase$yhat)
   MC.Test <- table(Test$Clase, PredTest$clase$yhat)
@@ -134,25 +90,18 @@ M3.QDA.1 <- Evaluacion(Metodo = "QDA.1",
 M3.QDA.2 <- Evaluacion(Metodo = "QDA.2", 
                        workers = availableCores())
 
-M3.QDA.3 <- Evaluacion(Metodo = "QDA.3", 
-                       workers = availableCores())
-
 
 # Gráficas ----------------------------------------------------------------
 
 G.QDA.1 <- M3.QDA.1[["Global"]] %>% 
-  mutate(Modelo = "M3",
-         Nombre = "QDA.1")
+  mutate(Modelo = "Quadratic Discriminant Analysis",
+         Nombre = "QDA 1")
 
 G.QDA.2 <- M3.QDA.2[["Global"]] %>% 
-  mutate(Modelo = "M3",
-         Nombre = "QDA.2")
+  mutate(Modelo = "Quadratic Discriminant Analysis",
+         Nombre = "QDA 2")
 
-G.QDA.3 <- M3.QDA.3[["Global"]] %>% 
-  mutate(Modelo = "M3",
-         Nombre = "QDA.3")
-
-M3 <- bind_rows(G.QDA.1, G.QDA.2, G.QDA.3) %>% 
+M3 <- bind_rows(G.QDA.1, G.QDA.2) %>% 
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
@@ -163,8 +112,21 @@ ggplot(data = M3,
 
 mean(G.QDA.1$TestGlobal)
 mean(G.QDA.2$TestGlobal)
-mean(G.QDA.3$TestGlobal)
 
 write.csv(x = M3,
           file = "Modelo3.csv",
           row.names = FALSE)
+
+# Matriz de confusión promediada ------------------------------------------
+
+MC.M3.QDA.1 <- M3.QDA.1[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M3.QDA.2 <- M3.QDA.2[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M3.QDA.1.PROM <- Reduce("+", MC.M3.QDA.1$MC.Test) / length(MC.M3.QDA.1$MC.Test)
+MC.M3.QDA.1.PROM <- round(t(apply(MC.M3.QDA.1.PROM, 1, function(x) x / sum(x) * 100)),2)
+
+MC.M3.QDA.2.PROM <- Reduce("+", MC.M3.QDA.2$MC.Test) / length(MC.M3.QDA.2$MC.Test)
+MC.M3.QDA.2.PROM <- round(t(apply(MC.M3.QDA.2.PROM, 1, function(x) x / sum(x) * 100)),2)

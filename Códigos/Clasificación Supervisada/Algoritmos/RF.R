@@ -108,12 +108,12 @@ M5.RF.2 <- Evaluacion(Metodo = "RF.2",
 # Grafica -----------------------------------------------------------------
 
 G.RF.1 <- M5.RF.1[["Global"]] %>%
-  mutate(Modelo = "M5",
-         Nombre = "RF.1")
+  mutate(Modelo = "Random Forest",
+         Nombre = "RF 1")
 
 G.RF.2 <- M5.RF.2[["Global"]] %>%
-  mutate(Modelo = "M5",
-         Nombre = "RF.2")
+  mutate(Modelo = "Random Forest",
+         Nombre = "RF 2")
 
 M5 <- bind_rows(G.RF.1, G.RF.2) %>% 
   mutate(Modelo = as.factor(Modelo),

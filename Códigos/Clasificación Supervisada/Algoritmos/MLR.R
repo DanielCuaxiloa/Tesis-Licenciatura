@@ -61,18 +61,18 @@ MLR.1 <- function(Train, Test) {
 
 MLR.2 <- function(Train, Test) {
   
-  XTrain <- model.matrix(Clase~., 
+  XTrain <- model.matrix(Clase~.^2, 
                          data = Train)[,-1]
   YTrain <- Train$Clase
   
-  XTest <- model.matrix(Clase~., 
+  XTest <- model.matrix(Clase~.^2, 
                         data = Test)[,-1]
   
   lasso.tun <- cv.glmnet(x = XTrain, 
                          y = YTrain, 
                          nfolds = 5,
                          alpha = 1,
-                         lambda = seq(from = 0, to = 20, by = 0.5),
+                         #lambda = seq(from = 0, to = 20, by = 0.5),
                          type.measure = "class",
                          family = "multinomial", 
                          type.multinomial = "ungrouped")
@@ -108,12 +108,12 @@ M1.MLR.2 <- Evaluacion(Metodo = "MLR.2",
 # Gráficas ----------------------------------------------------------------
 
 G.MLR.1 <- M1.MLR.1[["Global"]] %>% 
-  mutate(Modelo = "M1",
-         Nombre = "MLR.1")
+  mutate(Modelo = "Multinomial Logistic Regression",
+         Nombre = "MLR 1")
 
 G.MLR.2 <- M1.MLR.2[["Global"]] %>% 
-  mutate(Modelo = "M1",
-         Nombre = "MLR.2")
+  mutate(Modelo = "Multinomial Logistic Regression",
+         Nombre = "MLR 2")
 
 M1 <- bind_rows(G.MLR.1, G.MLR.2) %>% 
   mutate(Modelo = as.factor(Modelo),

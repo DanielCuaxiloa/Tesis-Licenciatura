@@ -21,27 +21,34 @@ Modelo4 <- read.csv(file = "Modelo4.csv",
 Modelo5 <- read.csv(file = "Modelo5.csv", 
                      stringsAsFactors = TRUE)
 
-Modelo6 <- read.csv(file = "Modelo6.csv", 
-                     stringsAsFactors = TRUE)
-
-
-Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5, Modelo6) %>% 
-  select(-ID1)
+Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5) %>% 
+  select(-ID1) %>% 
+  select(Modelo, Nombre, TestClase1, TestClase2, TestClase3, TestGlobal) %>% 
+  rename(
+    'TCC General' = TestGlobal,
+    'TCC - GTEX Brain' = TestClase1,
+    'TCC - TCGA LGG' = TestClase2,
+    'TCC - TCGA GM' = TestClase3,
+    Model = Nombre
+  )
+  
 
 ggplot(data = Datos,
-       mapping = aes(x = Nombre, y = TestClase2)) +
+       mapping = aes(x = Model, y = `TCC - TCGA GM`)) +
   facet_grid(cols = vars(Modelo), 
              scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 
+  labs(x = "Modelo", 
+       title = "Comparación de modelos") +
   theme_bw()
 
 Datos %>% 
-  group_by(Modelo, Nombre) %>% 
-  summarise(TestGlobal = mean(TestGlobal),
-            TestClase1 = mean(TestClase1),
-            TestClase2 = mean(TestClase2),
-            TestClase3 = mean(TestClase3)) %>% 
-  arrange(desc(TestClase3)) %>% 
+  group_by(Modelo, Model) %>% 
+  summarise(TCC_G = mean(`TCC General`),
+            TCC_C1 = mean(`TCC - GTEX Brain`),
+            TCC_C2 = mean(`TCC - TCGA LGG`),
+            TCC_C3 = mean(`TCC - TCGA GM`)) %>% 
+  arrange(desc(TCC_C1)) %>% 
   ungroup()
 
 
