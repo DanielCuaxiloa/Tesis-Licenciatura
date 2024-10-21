@@ -24,12 +24,12 @@ library(readr)
 
 # Funciones Auxiliares ----------------------------------------------------
 
-source("../FuncionesAuxiliares.R")
+source("../../FuncionesAuxiliares.R")
 
 
 # Conjuntos Train y Test --------------------------------------------------
 
-load("../Folds.RData")
+load("../../Folds_2Clases.RData")
 
 
 # Esquemas de clasificación -----------------------------------------------
@@ -65,17 +65,15 @@ LDA.2 <- function(Train, Test) {
   
   Y_Train <- Train %>% 
     mutate(Clase = case_when(
-      Clase == "GTEX_B" ~ 1,
-      Clase == "TCGA_BLGG" ~ 2,
-      Clase == "TCGA_GM" ~ 3)) %>% 
+      Clase == "Cancer" ~ 1,
+      Clase == "No_Cancer" ~ 2)) %>% 
     dplyr::select(Clase) %>% 
     as.matrix()
   
   Y_Test <- Test %>% 
     mutate(Clase = case_when(
-      Clase == "GTEX_B" ~ 1,
-      Clase == "TCGA_BLGG" ~ 2,
-      Clase == "TCGA_GM" ~ 3)) %>% 
+      Clase == "Cancer" ~ 1,
+      Clase == "No_Cancer" ~ 2)) %>% 
     dplyr::select(Clase) %>% 
     as.matrix()
   
@@ -100,11 +98,11 @@ LDA.2 <- function(Train, Test) {
 
 # Resultados --------------------------------------------------------------
 
-M2.LDA.1 <- Evaluacion(Metodo = "LDA.1",
-                       workers = availableCores())
+M2.LDA.1 <- Evaluacion2(Metodo = "LDA.1",
+                        workers = availableCores())
 
-M2.LDA.2 <- Evaluacion(Metodo = "LDA.2", 
-                       workers = availableCores())
+M2.LDA.2 <- Evaluacion2(Metodo = "LDA.2", 
+                        workers = availableCores())
 
 
 # Gráficas ----------------------------------------------------------------
@@ -132,4 +130,24 @@ mean(G.LDA.2$TestGlobal)
 write.csv(x = M2,
           file = "Modelo2.csv",
           row.names = FALSE)
+
+
+# Matriz de confusión promediada ------------------------------------------
+
+MC.M2.LDA.1 <- M2.LDA.1[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M2.LDA.2 <- M2.LDA.2[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M2.LDA.1.PROM <- Reduce("+", MC.M2.LDA.1$MC.Test) / length(MC.M2.LDA.1$MC.Test)
+MC.M2.LDA.1.PROM <- round(t(apply(MC.M2.LDA.1.PROM, 1, function(x) x / sum(x) * 100)),2)
+
+MC.M2.LDA.2.PROM <- Reduce("+", MC.M2.LDA.2$MC.Test) / length(MC.M2.LDA.2$MC.Test)
+MC.M2.LDA.2.PROM <- round(t(apply(MC.M2.LDA.2.PROM, 1, function(x) x / sum(x) * 100)),2)
+
+
+
+
+
 

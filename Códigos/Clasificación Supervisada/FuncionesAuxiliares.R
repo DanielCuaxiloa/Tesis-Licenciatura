@@ -20,7 +20,7 @@ ConjuntoEvaluacion <- function(x) {
   
 }
 
-ErroresClasificacion <- function(MC.Train, MC.Test){
+ErroresClasificacion1 <- function(MC.Train, MC.Test){
   
   # Train
   
@@ -57,7 +57,38 @@ ErroresClasificacion <- function(MC.Train, MC.Test){
   
 }
 
-Evaluacion <- function(Metodo, workers){
+ErroresClasificacion2 <- function(MC.Train, MC.Test){
+  
+  # Train
+  
+  ## Clase 1
+  TrainClase1 <- MC.Train[1,1]/sum(MC.Train[1,])
+  
+  ## Clase 2
+  TrainClase2 <- MC.Train[2,2]/sum(MC.Train[2,])
+  
+  ## TCC (Accuracy)
+  TrainGlobal <- sum(diag(MC.Train))/sum(MC.Train)
+  
+  # Test
+  
+  ## Clase 1
+  TestClase1 <- MC.Test[1,1]/sum(MC.Test[1,])
+  
+  ## Clase 2
+  TestClase2 <- MC.Test[2,2]/sum(MC.Test[2,])
+  
+  ## TCC (Accuracy)
+  TestGlobal <- sum(diag(MC.Test))/sum(MC.Test)
+  
+  Errores <- data.frame(TrainClase1, TrainClase2, TrainGlobal,
+                        TestClase1,  TestClase2, TestGlobal)
+  
+  return(Errores)
+  
+}
+
+Evaluacion1 <- function(Metodo, workers){
   
   plan(strategy = multisession, 
        workers = workers)
@@ -74,7 +105,7 @@ Evaluacion <- function(Metodo, workers){
     transpose()
   
   Individual <- Resultados %>% 
-    pmap(.f = ~ErroresClasificacion(.x, .y)) %>% 
+    pmap(.f = ~ErroresClasificacion1(.x, .y)) %>% 
     ldply(data.frame) %>% 
     mutate_if(is.numeric, ~.*100) %>% 
     mutate_if(is.numeric, round, 3) %>% 
@@ -91,6 +122,51 @@ Evaluacion <- function(Metodo, workers){
               TestClase1 = mean(TestClase1),
               TestClase2 = mean(TestClase2),
               TestClase3 = mean(TestClase3),
+              TestGlobal = mean(TestGlobal))
+  
+  # Agregar matrices de confusión al resultado
+  MatricesConfusion <- Resultados %>% 
+    pmap(function(MC.Train, MC.Test) {
+      list(MC.Train = MC.Train, MC.Test = MC.Test)
+    })
+  
+  return(list(Individual = Individual,
+              Global = Global,
+              MatricesConfusion = MatricesConfusion))
+}
+
+Evaluacion2 <- function(Metodo, workers){
+  
+  plan(strategy = multisession, 
+       workers = workers)
+  
+  set.seed(1234)
+  
+  # Guardar matrices de confusión para Train y Test
+  Resultados <- map(.x = Folds$splits,
+                    .f = ~ConjuntoEvaluacion(.x)) %>% 
+    transpose() %>% 
+    future_pmap(.f = get(Metodo),
+                .options = furrr_options(seed = TRUE),
+                .progress = TRUE) %>% 
+    transpose()
+  
+  Individual <- Resultados %>% 
+    pmap(.f = ~ErroresClasificacion2(.x, .y)) %>% 
+    ldply(data.frame) %>% 
+    mutate_if(is.numeric, ~.*100) %>% 
+    mutate_if(is.numeric, round, 3) %>% 
+    add_column(Metodo = Metodo,
+               .before = "TrainClase1")
+  
+  Global <- Individual %>% 
+    mutate(ID1 = factor(Folds$id)) %>% 
+    group_by(ID1) %>% 
+    summarise(TrainClase1 = mean(TrainClase1),
+              TrainClase2 = mean(TrainClase2),
+              TrainGlobal = mean(TrainGlobal),
+              TestClase1 = mean(TestClase1),
+              TestClase2 = mean(TestClase2),
               TestGlobal = mean(TestGlobal))
   
   # Agregar matrices de confusión al resultado

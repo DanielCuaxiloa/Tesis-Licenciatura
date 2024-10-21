@@ -204,4 +204,3 @@ predict.theoricQDA <- function(object, newdata){
               clase = clase.pred))
   
 }
-
