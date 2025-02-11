@@ -95,7 +95,7 @@ Evaluacion1 <- function(Metodo, workers){
   
   set.seed(1234)
   
-  # Guardar matrices de confusión para Train y Test
+  # Guardar matrices de confusion para Train y Test
   Resultados <- map(.x = Folds$splits,
                     .f = ~ConjuntoEvaluacion(.x)) %>% 
     transpose() %>% 
@@ -124,7 +124,7 @@ Evaluacion1 <- function(Metodo, workers){
               TestClase3 = mean(TestClase3),
               TestGlobal = mean(TestGlobal))
   
-  # Agregar matrices de confusión al resultado
+  # Agregar matrices de confusion
   MatricesConfusion <- Resultados %>% 
     pmap(function(MC.Train, MC.Test) {
       list(MC.Train = MC.Train, MC.Test = MC.Test)
@@ -142,7 +142,7 @@ Evaluacion2 <- function(Metodo, workers){
   
   set.seed(1234)
   
-  # Guardar matrices de confusión para Train y Test
+  # Guardar matrices de confusion para Train y Test
   Resultados <- map(.x = Folds$splits,
                     .f = ~ConjuntoEvaluacion(.x)) %>% 
     transpose() %>% 
@@ -169,7 +169,7 @@ Evaluacion2 <- function(Metodo, workers){
               TestClase2 = mean(TestClase2),
               TestGlobal = mean(TestGlobal))
   
-  # Agregar matrices de confusión al resultado
+  # Agregar matrices de confusion al resultado
   MatricesConfusion <- Resultados %>% 
     pmap(function(MC.Train, MC.Test) {
       list(MC.Train = MC.Train, MC.Test = MC.Test)

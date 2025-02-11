@@ -1,5 +1,6 @@
 
 #################
+# 3 Clases      #
 # Random Forest #
 # RF            #
 #################
@@ -8,6 +9,8 @@
 library(tibble)
 library(plyr)
 library(dplyr)
+library(tidyr)
+library(forcats)
 
 library(rsample)
 
@@ -20,15 +23,15 @@ library(ggplot2)
 
 # Funciones Auxiliares ----------------------------------------------------
 
-source("../FuncionesAuxiliares.R")
+source("../../FuncionesAuxiliares.R")
 
 
 # Conjuntos Train y Test --------------------------------------------------
 
-load("../Folds.RData")
+load("../../Folds_3Clases.RData")
 
 
-# Esquemas de clasificación -----------------------------------------------
+# Esquemas de clasificacion -----------------------------------------------
 
 RF.1 <- function(Train, Test) {
   
@@ -98,11 +101,11 @@ RF.2 <- function(Train, Test) {
 
 # Resultados --------------------------------------------------------------
 
-M5.RF.1 <- Evaluacion(Metodo = "RF.1",
-                      workers = availableCores())
+M5.RF.1 <- Evaluacion1(Metodo = "RF.1",
+                       workers = availableCores())
 
-M5.RF.2 <- Evaluacion(Metodo = "RF.2",
-                      workers = availableCores())
+M5.RF.2 <- Evaluacion1(Metodo = "RF.2",
+                       workers = availableCores())
 
 
 # Grafica -----------------------------------------------------------------
@@ -119,18 +122,87 @@ M5 <- bind_rows(G.RF.1, G.RF.2) %>%
   mutate(Modelo = as.factor(Modelo),
          Nombre = as.factor(Nombre))
 
-ggplot(data = M5,
-       mapping = aes(x = Nombre, y = TestGlobal)) +
-  geom_boxplot(fill = "steelblue3") + 
-  theme_bw()
-
-mean(G.RF.1$TestGlobal)
-mean(G.RF.2$TestGlobal)
-
 write.csv(x = M5,
           file = "Modelo5.csv",
           row.names = FALSE)
 
 
+# Matriz de confusion promediada ------------------------------------------
 
+MC.M5.RF.1 <- M5.RF.1[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M5.RF.2 <- M5.RF.2[["MatricesConfusion"]] %>% 
+  transpose()
+
+MC.M5.RF.1.PROM <- Reduce("+", MC.M5.RF.1$MC.Test) / length(MC.M5.RF.1$MC.Test)
+MC.M5.RF.1.PROM <- round(t(apply(MC.M5.RF.1.PROM, 1, function(x) x / sum(x) * 100)),2)
+
+MC.M5.RF.2.PROM <- Reduce("+", MC.M5.RF.2$MC.Test) / length(MC.M5.RF.2$MC.Test)
+MC.M5.RF.2.PROM <- round(t(apply(MC.M5.RF.2.PROM, 1, function(x) x / sum(x) * 100)),2)
+
+
+# MC Mapa de Calor --------------------------------------------------------
+
+MC.M5.RF.1.DF <- tibble(
+  PredTest = c("GTEX_Brain", "TCGA_LGG", "TCGA_GM"),
+  GTEX_Brain = c(87.26, 11.78, 0.95),
+  TCGA_LGG = c(4.30, 89.89, 5.80),
+  TCGA_GM = c(2.02, 31.20, 66.78)) %>%
+  pivot_longer(-PredTest, names_to = "Referencia", values_to = "Porcentaje") %>% 
+  rename(Prediccion = PredTest) %>%
+  mutate(Referencia = as.factor(Referencia),
+         Prediccion = as.factor(Prediccion)) %>% 
+  mutate(Prediccion = recode(Prediccion, 
+                             "GTEX_Brain" = "GTEX Brain", 
+                             "TCGA_LGG" = "TCGA LGG", 
+                             "TCGA_GM" = "TCGA GM"),
+         Referencia = recode(Referencia,
+                             "GTEX_Brain" = "GTEX Brain",
+                             "TCGA_LGG" = "TCGA LGG",
+                             "TCGA_GM" = "TCGA GM"),
+         Modelo = as.factor("Random Forest"),
+         Nombre = as.factor("Modelo 1")) %>% 
+  mutate(Referencia = fct_relevel(droplevels(Referencia),
+                                  c("TCGA GM",
+                                    "TCGA LGG",
+                                    "GTEX Brain")),
+         Prediccion = fct_relevel(droplevels(Prediccion),
+                                  c("GTEX Brain",
+                                    "TCGA LGG",
+                                    "TCGA GM")))
+
+MC.M5.RF.2.DF <- tibble(
+  PredTest = c("GTEX_Brain", "TCGA_LGG", "TCGA_GM"),
+  GTEX_Brain = c(90.77, 8.14, 1.09),
+  TCGA_LGG = c(6.22, 84.31, 9.47),
+  TCGA_GM = c(1.96, 20.96, 77.08)) %>%
+  pivot_longer(-PredTest, names_to = "Referencia", values_to = "Porcentaje") %>% 
+  rename(Prediccion = PredTest) %>%
+  mutate(Referencia = as.factor(Referencia),
+         Prediccion = as.factor(Prediccion)) %>% 
+  mutate(Prediccion = recode(Prediccion, 
+                             "GTEX_Brain" = "GTEX Brain", 
+                             "TCGA_LGG" = "TCGA LGG", 
+                             "TCGA_GM" = "TCGA GM"),
+         Referencia = recode(Referencia,
+                             "GTEX_Brain" = "GTEX Brain",
+                             "TCGA_LGG" = "TCGA LGG",
+                             "TCGA_GM" = "TCGA GM"),
+         Modelo = as.factor("Random Forest"),
+         Nombre = as.factor("Modelo 2")) %>% 
+  mutate(Referencia = fct_relevel(droplevels(Referencia),
+                                  c("TCGA GM",
+                                    "TCGA LGG",
+                                    "GTEX Brain")),
+         Prediccion = fct_relevel(droplevels(Prediccion),
+                                  c("GTEX Brain",
+                                    "TCGA LGG",
+                                    "TCGA GM")))
+
+M5.MC <- bind_rows(MC.M5.RF.1.DF, MC.M5.RF.2.DF)
+
+write.csv(x = M5.MC,
+          file = "MC5.csv",
+          row.names = FALSE)
 

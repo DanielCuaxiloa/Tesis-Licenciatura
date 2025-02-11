@@ -1,7 +1,7 @@
 
-####################
-# Preprocesamiento # 
-####################
+###############################
+# Preprocesamiento | 2 Clases # 
+###############################
 
 rm(list = ls(all.names = TRUE))
 gc()
@@ -34,14 +34,13 @@ Datos <- Datos %>% select(-c("sample","samples")) %>%
                                                  "TCGA Glioblastoma Multiforme"))) %>% 
   select(-c("_gender", "detailed_category")) %>% 
   rename(y = TCGA_GTEX_main_category) %>% 
-  mutate(Clase = factor(case_when(y == "GTEX Brain" ~ "GTEX_B",
-                                  y == "TCGA Brain Lower Grade Glioma" ~ "TCGA_BLGG",
-                                  y == "TCGA Glioblastoma Multiforme" ~ "TCGA_GM"))) %>% 
+  mutate(Clase = factor(case_when(y == "GTEX Brain" ~ "No_Cancer",
+                                  y == "TCGA Brain Lower Grade Glioma" | y == "TCGA Glioblastoma Multiforme" ~ "Cancer"))) %>% 
   select(-y)
 
 summary(Datos)
 
-## Remuestreo de datos en conjuntos de entrenamiento (Train) y evaluación (Test)
+## Remuestreo de datos en conjuntos de entrenamiento (Train) y evaluacion (Test)
 ## V-K Cross-validation (V = 20, K = 5).
 set.seed(1234)
 Folds <- vfold_cv(data = Datos,
@@ -51,7 +50,7 @@ Folds <- vfold_cv(data = Datos,
 
 rm(Datos)
 
-save.image("Folds.RData")
+save.image("Folds_2Clases.RData")
 
 
 

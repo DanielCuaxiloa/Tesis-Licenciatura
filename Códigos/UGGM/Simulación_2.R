@@ -74,7 +74,7 @@ Sample <- function(n, mu, Sigma, class.label) {
 
 # Funciones NetQDA --------------------------------------------------------
 
-source("UGGM_QDA.R")
+source("Modelo_UGGM-QDA.R")
 
 
 # Simulaciones ------------------------------------------------------------
@@ -295,8 +295,17 @@ ggplot(data = cv.results,
              linetype = "dashed", 
              color = "red") + 
   facet_grid(N~P) +
+  labs(x = expression(lambda), 
+       y = "TCCG", 
+       title = expression("Tuneo del hiperpárametro " * lambda),
+       subtitle = "Modelo UGGM-QDA") + 
   theme_bw() +
-  labs(x = "Lambda", y = "TCCG", title = "Tuneo de lambda")
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10))
 
 
 # NetQDA v.s QDA ----------------------------------------------------------
@@ -378,7 +387,7 @@ for (p in P) {
   
   for (n in N) {
    
-    Models$Theoric$Model[[as.character(p)]][[as.character(n)]] <- "theoric"
+    Models$Theoric$Model[[as.character(p)]][[as.character(n)]] <- "Teórico"
     
     Models$Theoric$Pred[[as.character(p)]][[as.character(n)]]  <- predict.theoricQDA(object = gen.data$Theoric[[as.character(p)]],
                                                                                      newdata = select(gen.data$Data$Test[[as.character(p)]], -Clase))
@@ -394,7 +403,7 @@ for (p in P) {
 Resultados <- bind_rows(data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
                                    N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
                                    Accuracy = unlist(Models$UGGM_QDA$Accuracy),
-                                   Modelo = factor("UGGM_QDA")),
+                                   Modelo = factor("UGGM-QDA")),
                         data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
                                    N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
                                    Accuracy = unlist(Models$QDA$Accuracy),
@@ -402,7 +411,7 @@ Resultados <- bind_rows(data.frame(P = rep(P, each = length(names(gen.data$Data$
                         data.frame(P = rep(P, each = length(names(gen.data$Data$Train[[as.character(P[1])]]))),
                                    N = rep(names(gen.data$Data$Train[[as.character(P[1])]]), times = length(P)),
                                    Accuracy = unlist(Models$Theoric$Accuracy),
-                                   Modelo = factor("Theoric")))
+                                   Modelo = factor("Teórico")))
 
 rownames(Resultados) <- NULL
 
@@ -422,7 +431,14 @@ ggplot(data = Resultados,
        y = "TCCG", 
        color = "Modelo", 
        shape = "Modelo",
-       title = "Compación de modelos UGGM-QDA v.s QDA")
+       title = "UGGM-QDA v.s QDA",
+       subtitle = "Compación de modelos") +
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 10))
 
 ##
 layout(matrix(c(1,2,3), 1, 3, byrow = TRUE))
@@ -442,7 +458,6 @@ S[lower.tri(S)] <- 0
 
 qgraph(S, directed = FALSE, layout = "spring", title = "(c)")
 
-##
 
 
 
