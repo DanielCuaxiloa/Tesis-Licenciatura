@@ -128,6 +128,8 @@ N <- c(50, 100, 500, 1000)
 
 gen.data <- Gen.Data(P = P, N = N)
 
+Datos <- gen.data$Data
+save.image("Datos.RData")
 
 # Networks ----------------------------------------------------------------
 
