@@ -37,9 +37,19 @@ ggplot(Datos,
   geom_tile(color = "white") +
   geom_text(aes(label = sprintf("%.2f%%", Porcentaje)), 
             color = "black", 
-            size = 3) +
-  scale_fill_gradient(low = "white", high = "red") +
-  facet_grid(cols = vars(Modelo),
+            size = 4) +
+scale_fill_gradient(low = "white", high = "steelblue1") + 
+facet_grid(cols = vars(Modelo),
              rows = vars(Nombre)) + 
-  labs(title = "Promedio Matrices de Confusión", x = "Predicción", y = "Referencia") +
-  theme_bw()
+  labs(title = "Matrices de Confusión",
+       subtitle = "Promedios",
+       x = "Predicción", 
+       y = "Referencia") +
+  theme_bw() + 
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 8),
+        axis.text.y = element_text(size = 8))
+

@@ -21,34 +21,65 @@ Modelo4 <- read.csv(file = "Modelo4.csv",
 Modelo5 <- read.csv(file = "Modelo5.csv", 
                      stringsAsFactors = TRUE)
 
-Datos <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5) %>% 
+Resultados_Train <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5) %>% 
+  select(-ID1) %>% 
+  select(Modelo, Nombre, TrainClase1, TrainClase2, TrainClase3, TrainGlobal) %>% 
+  rename('TCC General' = TrainGlobal,
+         'TCC - GTEX Brain' = TrainClase1,
+         'TCC - TCGA LGG' = TrainClase2,
+         'TCC - TCGA GM' = TrainClase3,
+         Model = Nombre)
+
+Resultados_Test <- bind_rows(Modelo1, Modelo2, Modelo3, Modelo4, Modelo5) %>% 
   select(-ID1) %>% 
   select(Modelo, Nombre, TestClase1, TestClase2, TestClase3, TestGlobal) %>% 
-  rename(
-    'TCC General' = TestGlobal,
-    'TCC - GTEX Brain' = TestClase1,
-    'TCC - TCGA LGG' = TestClase2,
-    'TCC - TCGA GM' = TestClase3,
-    Model = Nombre
-  )
-  
+  rename('TCC General' = TestGlobal,
+         'TCC - GTEX Brain' = TestClase1,
+         'TCC - TCGA LGG' = TestClase2,
+         'TCC - TCGA GM' = TestClase3,
+         Model = Nombre)
 
-ggplot(data = Datos,
+ggplot(data = Resultados_Test,
        mapping = aes(x = Model, y = `TCC - TCGA GM`)) +
   facet_grid(cols = vars(Modelo), 
              scales = "free_x") +
   geom_boxplot(fill = "steelblue3") + 
   labs(x = "Modelo", 
-       title = "Comparación de modelos") +
-  theme_bw()
+       title = "Comparación de modelos",
+       subtitle = "Tasa de clasificación correcta") +
+  theme_bw() + 
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
 
-Datos %>% 
+Resultados_Train %>% 
   group_by(Modelo, Model) %>% 
   summarise(TCC_G = mean(`TCC General`),
             TCC_C1 = mean(`TCC - GTEX Brain`),
             TCC_C2 = mean(`TCC - TCGA LGG`),
             TCC_C3 = mean(`TCC - TCGA GM`)) %>% 
-  arrange(desc(TCC_C1)) %>% 
+  arrange(Modelo) %>% 
+  ungroup()
+
+Resultados_Test %>% 
+  group_by(Modelo, Model) %>% 
+  summarise(TCC_G = mean(`TCC General`),
+            TCC_C1 = mean(`TCC - GTEX Brain`),
+            TCC_C2 = mean(`TCC - TCGA LGG`),
+            TCC_C3 = mean(`TCC - TCGA GM`)) %>% 
+  arrange(Modelo) %>% 
+  ungroup()
+
+Resultados_Test %>% 
+  group_by(Modelo, Model) %>% 
+  summarise(TCC_G = round(sd(`TCC General`), 2),
+            TCC_C1 = round(sd(`TCC - GTEX Brain`), 2),
+            TCC_C2 = round(sd(`TCC - TCGA LGG`), 2),
+            TCC_C3 = round(sd(`TCC - TCGA GM`), 2)) %>% 
+  arrange(Modelo) %>% 
   ungroup()
 
 
