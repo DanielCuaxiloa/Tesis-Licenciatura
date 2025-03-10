@@ -21,6 +21,7 @@ library(cowplot)
 library(gridExtra)
 library(ggbiplot)
 
+
 # Datos -------------------------------------------------------------------
 
 ## Datos en escala log2(norm_count+1)
@@ -52,7 +53,7 @@ Datos <- Datos %>%
 ## write.csv(Datos, file = "Datos.csv", row.names = FALSE)
 
 
-# Correlacion de Pearson --------------------------------------------------
+# Correlación de Pearson --------------------------------------------------
 
 ## Clase: Brain_Cortex: * Brain - Cortex
 ##                      * Brain - Anterior Cingulate Cortex (Ba24)
@@ -153,21 +154,22 @@ Datos <- Datos %>%
 Aux1 <- ggpairs(Datos,
                 mapping = aes(color = Clase),
                 columns = 1:11,
-                lower = list(continuous = "blank"), 
-                diag  = list(continuous = "blank"), 
-                upper = list(continuous = wrap("points", alpha = 0.7, size = 0.5)),
+                lower = list(continuous = wrap("points", alpha = 0.7, size = 0.5)), 
+                #diag  = list(continuous = wrap("cor", size = 5, mapping = aes())), 
+                upper = list(continuous = wrap("cor", size = 3, 
+                                               method = "pearson", fontface="bold")),
                 legend = 1) +
   scale_color_brewer(palette = "Set2", name = "Clase") +
   labs(title = "Diagramas de dispersión",
-       subtitle = "Principales enzimas involucradas en la via de las Kinureninas") +
+       subtitle = "Principales enzimas involucradas en la vía de las Kinureninas") +
   theme_bw() +
   theme(legend.position = "none",
         plot.title = element_text(size = 18),
         plot.subtitle = element_text(size = 14),
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
-        axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12))
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank())
 
 Aux2 <- ggplot(Datos, aes(x = 1, y = 1, color = Clase)) +
   geom_point() +
@@ -212,9 +214,7 @@ ggbiplot(pca, group = Datos$Clase,
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12)) +
-  xlim(-4, 4) +
-  ylim(-4, 4)
+        axis.text.y = element_text(size = 12))
 
 ## PC1 v.s PC3
 
@@ -236,9 +236,7 @@ ggbiplot(pca, group = Datos$Clase,
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12)) +
-  xlim(-4, 4) +
-  ylim(-4, 4)
+        axis.text.y = element_text(size = 12))
 
 ## PC2 v.s PC3
 
@@ -260,12 +258,20 @@ ggbiplot(pca, group = Datos$Clase,
         axis.title.x = element_text(size = 14),
         axis.title.y = element_text(size = 14),
         axis.text.x = element_text(size = 12),
-        axis.text.y = element_text(size = 12)) +
-  xlim(-4, 4) +
-  ylim(-4, 4)
+        axis.text.y = element_text(size = 12)) 
+
+PCA <- pca$x %>% 
+  as.data.frame() %>% 
+  select(PC1, PC2, PC3) %>% 
+  bind_cols(Datos) %>% 
+  select_if(is.numeric) %>% 
+  cor(use = "complete.obs") %>%
+  select(PC1, PC2, PC3)
+
+round(PCA[, c("PC1", "PC2", "PC3")],2)
 
 
-# Pruebas Kruskal-Wallis y Wilcoxon ---------------------------------------
+# Pruebas Kruskal-Wallis y Dunn ---------------------------------------
 
 ## Lista de resultados
 dunn_results <- list()

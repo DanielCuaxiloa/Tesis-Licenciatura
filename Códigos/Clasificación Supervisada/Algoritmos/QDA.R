@@ -63,13 +63,11 @@ QDA.2 <- function(Train, Test) {
   rho.tune <- tune.rho(formula = Clase~.,
                        data = Train,
                        rhos = seq(0.1, 1, by = 0.01),
-                       #prior = c(1/3, 1/3, 1/3),
                        nfolds = 5)
   
   NetQDA <- UGGM_QDA(formula = Clase~., 
                      data = Train,
-                     rho = rho.tune$best.rho,
-                     prior = c(1/3, 1/3, 1/3))
+                     rho = rho.tune$best.rho)
   
   PredTrain <- predict.UGGM_QDA(object = NetQDA,
                                 newdata = dplyr::select(Train, -Clase))
